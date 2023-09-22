@@ -214,10 +214,68 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49349f5c07ddab3419f38a202c6bb220, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  controlAcceleration: {x: 0.3, y: 0.3, z: 0}
-  gravity: {x: 0, y: -0.1, z: 0}
-  drag: {x: 0, y: 0, z: 0}
-  maximumVelocity: {x: 0, y: 0.1, z: 0}
+  targetFlightDirection: 0.6
+  jolt:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0.9140461
+      outSlope: 0.9140461
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.08256881
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 3.2226202
+      outSlope: 3.2226202
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.04024607
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  lift:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 13.11085
+      outSlope: 13.11085
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.045871556
+    - serializedVersion: 3
+      time: 0.2
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  controlAcceleration: {x: 5, y: 5, z: 0}
+  gravity: {x: 0, y: -0.01, z: 0}
+  dragCoefficient: 200
+  maximumVelocity: {x: 0, y: 1, z: 0}
   numOfCasts: 3
   raycastSkinWidth: 0.2
 --- !u!1 &519420028

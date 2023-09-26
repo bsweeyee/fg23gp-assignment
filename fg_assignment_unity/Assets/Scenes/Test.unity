@@ -393,6 +393,7 @@ GameObject:
   m_Component:
   - component: {fileID: 464562780}
   - component: {fileID: 464562781}
+  - component: {fileID: 464562783}
   - component: {fileID: 464562782}
   m_Layer: 0
   m_Name: Player
@@ -410,7 +411,7 @@ Transform:
   m_GameObject: {fileID: 464562779}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3, y: -1, z: 0}
+  m_LocalPosition: {x: 0.75, y: 1.25, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -474,7 +475,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49349f5c07ddab3419f38a202c6bb220, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetFlightDirection: 0.55
   jolt:
     serializedVersion: 2
     m_Curve:
@@ -534,10 +534,27 @@ MonoBehaviour:
     m_RotationOrder: 4
   controlAcceleration: {x: 5, y: 10, z: 0}
   gravity: {x: 0, y: -0.5, z: 0}
-  dragCoefficient: 200
   maximumVelocity: {x: 0, y: 1, z: 0}
+  minDragCoefficient: 30
+  maxDragCoefficient: 200
   numOfCasts: 3
   raycastSkinWidth: 0.1
+--- !u!114 &464562783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 464562779}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8535665a8ed4e184bb186d08eef93730, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  flightDirectionControlValue: 0.5
+  boostDirectionControlValue: 0.339
+  boostSpeed: 40
+  boostFrames: 90
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -770,6 +787,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1242402907}
   - component: {fileID: 1242402908}
+  - component: {fileID: 1242402909}
   m_Layer: 0
   m_Name: Input
   m_TagString: Untagged
@@ -819,9 +837,9 @@ MonoBehaviour:
   m_ActionEvents:
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 464562782}
-        m_TargetAssemblyTypeName: Player, Assembly-CSharp
-        m_MethodName: OnInputPress
+      - m_Target: {fileID: 1242402909}
+        m_TargetAssemblyTypeName: Lander.InputController, Assembly-CSharp
+        m_MethodName: OnFly
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -833,11 +851,39 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 8e241387-7b3e-47cd-a960-e886a3c19359
     m_ActionName: KeyboardMouse/Movement[/Keyboard/w,/Keyboard/a,/Keyboard/d]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1242402909}
+        m_TargetAssemblyTypeName: Lander.InputController, Assembly-CSharp
+        m_MethodName: OnBoost
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 368fcc6d-d384-4b41-8aa9-3cc2c635a07b
+    m_ActionName: KeyboardMouse/Boost[/Keyboard/space]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: KeyboardMouse
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
+--- !u!114 &1242402909
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1242402906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 271d1f268aa98c1479ee3a4a4948ef7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1284537423
 GameObject:
   m_ObjectHideFlags: 0

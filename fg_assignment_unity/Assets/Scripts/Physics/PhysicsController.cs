@@ -1,84 +1,138 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Utilities;
 
 namespace Lander {
     namespace Physics {
         public class PhysicsController : MonoBehaviour, IPhysics {
 
-            [SerializeField][Range(0, 1)] private float targetFlightDirection;
+            [Header("Acceleration")]
             [SerializeField] private AnimationCurve jolt;
             [SerializeField] private AnimationCurve lift;
             [SerializeField] private Vector3 controlAcceleration;
             [SerializeField] private Vector3 gravity;
-            [SerializeField][Min(0.1f)] private float dragCoefficient = 5;
-
-            [SerializeField] private Vector3 maximumVelocity;
-
-            [SerializeField][Min(2)] private int numOfCasts = 3;
-            [SerializeField] private float raycastSkinWidth = 1;
             
-            private Vector3 currentVelocity;
+            [Header("Velocity")]
+            [SerializeField] private Vector3 maximumVelocity;
+            
+            [Header("Drag Coefficients")]
+            [SerializeField][Min(0.1f)] private float minDragCoefficient = 50;
+            [SerializeField][Min(0.1f)] private float maxDragCoefficient = 100;
+
+
+            [Header("Collision raycasts")]
+            [SerializeField][Min(2)] private int numOfCasts = 3;
+            [SerializeField] private float raycastSkinWidth = 1;            
 
             private BoxCollider2D boxCollider;
 
+            private Vector3 currentVelocity;
+            private Vector3 externalAcceleration;
             private Vector3 inputDirection;
+            private Vector3 targetFlightDirection;
+            private float controlRate;
+            private float dragCoefficientRate = 1;
             private bool isGrounded;
-            private float controlDt;
 
             public Vector3 CurrentVelocity {
                 get {
                     return currentVelocity;
                 }
+            }           
+
+            public Vector3 InputDirection {                
                 set {
-                    currentVelocity = value;
+                    inputDirection = value;
                 }
             }
 
-            public void Start() {
+            public Vector3 TargetFlightDirection {
+                set {
+                    targetFlightDirection = value;
+                }
+            }
+
+            public float ControlRate {
+                set {
+                    controlRate = value;
+                }
+            }
+
+            public bool IsGrounded {
+                get {
+                    return isGrounded;
+                }
+            }
+
+            public void Initialize() {
                 boxCollider = GetComponent<BoxCollider2D>();
             }
 
-            public void FixedUpdate() {
-                Evaluate(Time.fixedDeltaTime);
-            }
-
-            public void Evaluate(float dt) {
+            public void OnFixedTick(float dt) {
                 currentVelocity = EvaluateAcceleration(dt);        
                 currentVelocity = EvaluateCollision();
-                EvaluateControlRate(dt);
 
                 transform.position += currentVelocity;
                 if (isGrounded) currentVelocity = new Vector3(currentVelocity.x, 0, currentVelocity.z);
+            }
+
+            public void OnTick(float dt) {
+
+            }
+
+            public void AddAcceleration(Vector3 a) {
+                externalAcceleration += a;
+                dragCoefficientRate = 0;
+                currentVelocity = Vector3.zero;                
+            }
+            
+            private Vector3 EvaluateInput(Vector3 input, float totalDt) {
+                var output = Vector3.zero;
+                if (input.x < 0) {
+                    output = Vector3.Lerp(-Vector3.right, targetFlightDirection, lift.Evaluate(totalDt));
+                } else if (input.x > 0) {
+                    output = Vector3.Lerp(Vector3.right, targetFlightDirection, lift.Evaluate(totalDt));
+                }
+
+                return output;
+            }
+
+            private Vector3 EvaluateDrag(Vector3 velocity, float dt) {
+                var vMag = velocity.magnitude;
+                var dragCo = Mathf.Lerp(minDragCoefficient, maxDragCoefficient, dragCoefficientRate / 2.0f);
+
+                var drag = 0.5f * vMag * vMag * dragCo * velocity.normalized;
+                drag = (drag.y < 0.01f) ? new Vector3(drag.x, 0, drag.z) : drag;
+                drag = (drag.magnitude < 0.001f) ? Vector3.zero : drag;
+
+                dragCoefficientRate = Mathf.Clamp(dragCoefficientRate + dt, 0, 2.0f);
+
+                return drag;
             }
 
             private Vector3 EvaluateAcceleration(float dt) {
                 var vx = currentVelocity.x;
                 var vy = currentVelocity.y;
                 var vz = currentVelocity.z;
-                var vMag = currentVelocity.magnitude;
 
                 // modify input controls
-                var input = Vector3.zero;
-                if (inputDirection.x < 0) {
-                    var targetDir = Vector3.Lerp(Vector3.up, -Vector3.right, targetFlightDirection).normalized;
-                    input = Vector3.Lerp(-Vector3.right, targetDir, lift.Evaluate(controlDt));
-                } else if (inputDirection.x > 0) {
-                    var targetDir = Vector3.Lerp(Vector3.up, Vector3.right, targetFlightDirection).normalized;
-                    input = Vector3.Lerp(Vector3.right, targetDir, lift.Evaluate(controlDt));
-                }
+                var input = EvaluateInput(inputDirection, controlRate);
                 
                 // calculate drag using formula 1/2*v^2*C
-                var drag = 0.5f * vMag * vMag * dragCoefficient * currentVelocity.normalized;
-                drag = (drag.y < 0.01f) ? new Vector3(drag.x, 0, drag.z) : drag;
-                drag = (drag.magnitude < 0.001f) ? Vector3.zero : drag;
+                var drag = EvaluateDrag(currentVelocity, dt);
                 
                 // calculate acceleration
-                var cA = Vector3.Lerp(controlAcceleration * 0.1f, controlAcceleration, jolt.Evaluate(controlDt));
+                var cA = Vector3.Lerp( controlAcceleration * 0.1f , controlAcceleration, jolt.Evaluate(controlRate));
+                
                 var finalAcceleration = new Vector3(cA.x * input.x, cA.y * input.y, cA.z * input.z); 
-                finalAcceleration = finalAcceleration - drag;
+                finalAcceleration -= drag;                
+                finalAcceleration += externalAcceleration;
+                externalAcceleration = Vector3.zero; // we reset all added external acceleration once consumed 
+                
                 if(!isGrounded && Mathf.Abs(vy) < maximumVelocity.y) {
                     finalAcceleration += gravity;
                 }
@@ -126,7 +180,6 @@ namespace Lander {
                         var mainPosition = hitDifference[0].Item2 - ySign * new Vector3(0, size.y / 2, 0);
                         RaycastHit2D hitPos;
                         var isHit = GetCollisionPoint(mainPosition, size.y, ySign * Vector3.up, out hitPos);
-                        // if (Vector3.Dot(hitPos.collider.transform.up, -ySign * Vector3.up) < 0.01) return;
                         
                         if (isHit) {
                             if (ySign < 0) {
@@ -156,23 +209,12 @@ namespace Lander {
                 return new Vector3(vx, vy, vz);
             }
 
-            private void EvaluateControlRate(float dt) {
-                // add to control dt
-                if (inputDirection.magnitude > 0) {
-                    controlDt += dt;
-                    controlDt = Mathf.Clamp01(controlDt);
-                }
-                else {
-                    controlDt = 0;
-                }
-            }
-
             private bool GetCollisionPoint(Vector3 mainPosition, float minCastSize, Vector3 castDirection, out RaycastHit2D point) {
                 var hitInfos = Physics2D.RaycastAll(mainPosition, castDirection, minCastSize + raycastSkinWidth);
                 hitInfos = hitInfos.Where(x => x.collider.gameObject != gameObject).OrderBy( x => ((Vector3) x.point - mainPosition).magnitude ).ToArray();
-                // Debug.Log($"{castDirection}, {hitInfos.Length}");
+                // Debug.Log($"{castDirection}, {hitInfos.Length}");                
                 if (hitInfos.Length > 0) point = hitInfos[0];
-                else point = new RaycastHit2D();
+                else point = new RaycastHit2D();                
                 return hitInfos.Length > 0;
             }
 
@@ -187,17 +229,6 @@ namespace Lander {
                     }
                 }
                 return hitDifference;
-            }
-
-            // TODO: move this to a input controller script to map buttons different depending on game state
-            public void OnInputPress(InputAction.CallbackContext context) {
-                OnDirectionIO(context.ReadValue<Vector2>());
-            }
-
-            public void OnDirectionIO(Vector3 dir) {
-                // TODO: might want to change input dir to 1 instead of normalized
-                if (inputDirection.x != dir.x) controlDt = 0;
-                inputDirection = dir;    
             }
         
         #if UNITY_EDITOR
@@ -218,12 +249,7 @@ namespace Lander {
 
                 // draw current velocity
                 Gizmos.color = Color.blue;
-                Gizmos.DrawLine(transform.position, transform.position + (currentVelocity.normalized * 0.5f));
-
-                // draw target velocity
-                Gizmos.color = Color.cyan;
-                Gizmos.DrawLine(transform.position, transform.position + ( Vector3.Lerp(Vector3.up, Vector3.right, targetFlightDirection).normalized * 0.5f ));
-                Gizmos.DrawLine(transform.position, transform.position + ( Vector3.Lerp(Vector3.up, -Vector3.right, targetFlightDirection).normalized * 0.5f ));
+                Gizmos.DrawLine(transform.position, transform.position + (currentVelocity.normalized * 0.5f));                
             }
         #endif
         }

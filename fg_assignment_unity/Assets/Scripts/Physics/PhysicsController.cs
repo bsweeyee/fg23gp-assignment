@@ -9,13 +9,14 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace Lander {
     namespace Physics {
-        public class PhysicsController : MonoBehaviour, IPhysics {
+        public class PhysicsController : MonoBehaviour, IPhysics, IDebug {
 
             [Header("Acceleration")]
             [SerializeField] private AnimationCurve jolt;
             [SerializeField] private AnimationCurve lift;
             [SerializeField] private Vector3 controlAcceleration;
             [SerializeField] private Vector3 gravity;
+            [SerializeField][Range(0, 1)] private float externalAccelerationFalloff = 0.5f;
             
             [Header("Velocity")]
             [SerializeField] private Vector3 maximumVelocity;
@@ -76,6 +77,14 @@ namespace Lander {
                 }
             }
 
+            public Vector3 Size {
+                get { return size; }
+            }
+
+            public Vector3 SizeWithCast {
+                get { return size + Vector3.one * raycastSkinWidth; }
+            }            
+
             public void Initialize() {
                 boxCollider2D = GetComponent<BoxCollider2D>();
                 boxCollider2D.size = size;
@@ -99,6 +108,14 @@ namespace Lander {
                 currentVelocity = Vector3.zero;                
             }
             
+            public void  Reset() {
+                currentVelocity = Vector3.zero;
+                externalAcceleration = Vector3.zero;
+                controlRate = 0;
+                dragCoefficientRate = 1;
+                inputDirection = Vector3.zero;                            
+            }
+
             private Vector3 EvaluateInput(Vector3 input, float totalDt) {
                 var output = Vector3.zero;
                 if (input.x < 0) {
@@ -140,11 +157,11 @@ namespace Lander {
                 var finalAcceleration = new Vector3(cA.x * input.x, cA.y * input.y, cA.z * input.z); 
                 finalAcceleration -= drag;                
                 finalAcceleration += externalAcceleration;
-                externalAcceleration = Vector3.zero; // we reset all added external acceleration once consumed 
+                externalAcceleration *= (1 - externalAccelerationFalloff); // we reduce external acceleration by factor 
                 
                 if(!isGrounded && Mathf.Abs(vy) < maximumVelocity.y) {
                     finalAcceleration += gravity;
-                }
+                }                
 
                 return new Vector3(vx, vy, vz) + (finalAcceleration * dt);
             }
@@ -245,7 +262,13 @@ namespace Lander {
                 Gizmos.color = Color.blue;
                 Gizmos.DrawLine(transform.position, transform.position + (currentVelocity.normalized * 0.5f));                
             }
-        #endif
+
+            public void OnDrawGUI() {
+                string vel = $"current velocity: {currentVelocity}, {currentVelocity.magnitude}";
+                
+                GUILayout.Label(vel);
+            }
+#endif
         }
     }
 }

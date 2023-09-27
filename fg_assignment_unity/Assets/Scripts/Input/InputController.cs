@@ -7,8 +7,14 @@ using System.Data.Common;
 
 namespace Lander {
     public struct InputData {
+        public enum EBoostState {
+            NONE,
+            PRESSED,            
+            RELEASED
+        }
+
         public Vector2 Movement;
-        public bool Boost;
+        public EBoostState BoostState;        
     }
 
     public interface IInput {
@@ -17,7 +23,6 @@ namespace Lander {
 
     public class InputController : MonoBehaviour
     {
-        private InputData data;
         private IInput[] inputs;
 
         public void Initialize() {
@@ -25,8 +30,13 @@ namespace Lander {
         }
 
         public void OnFly(InputAction.CallbackContext context) {
+            var data = new InputData();
+            data.Movement = Vector3.zero;
+            data.BoostState = InputData.EBoostState.NONE;
+
             var movement = context.ReadValue<Vector2>();
             data.Movement = movement;
+            data.BoostState = InputData.EBoostState.NONE;
 
             foreach(var input in inputs) {
                 input.Notify(data);
@@ -34,14 +44,19 @@ namespace Lander {
         }
 
         public void OnBoost(InputAction.CallbackContext context) {
+            var data = new InputData();
+            data.Movement = Vector3.zero;
+            data.BoostState = InputData.EBoostState.NONE;
+
             switch(context.phase) {
-                case InputActionPhase.Started:                
-                data.Boost = context.ReadValueAsButton();
-                break;
                 case InputActionPhase.Performed:
-                break;
+                case InputActionPhase.Started:
+                data.BoostState = InputData.EBoostState.PRESSED;
+                // Debug.Log("started: " + context.ReadValueAsButton());
+                break;                                
                 case InputActionPhase.Canceled:
-                data.Boost = context.ReadValueAsButton();
+                data.BoostState = InputData.EBoostState.RELEASED;
+                // Debug.Log("canceled: " + context.ReadValueAsButton());                
                 break;
             }
             

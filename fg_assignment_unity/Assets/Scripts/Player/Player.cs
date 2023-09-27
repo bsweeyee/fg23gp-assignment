@@ -9,14 +9,16 @@ namespace Lander {
     public class Player : MonoBehaviour, IEntities, IInput {
         [Header("Settings")]
         [SerializeField] private LayerMask physicsLayer;
+        [SerializeField] private float inputWaitFrames = 30;
 
         [Header("Flight")]
         [SerializeField][Range(0, 1)] private float flightDirectionControlValue;
         
         [Header("Boost")]
-        [SerializeField][Range(0, 1)] private float boostDirectionControlValue;
-        [SerializeField] private float boostSpeed;
-        [SerializeField] private float boostFrames = 30;
+        [SerializeField][Range(0, 1)] private float boostMinimumDirection;
+        [SerializeField][Range(0, 1)] private float boostMaximumDirection;
+        [SerializeField] private float boostAngleSpeed;
+        [SerializeField] private float boostMoveSpeed;
 
         [Header("Death")]
         [SerializeField] private float speedDeathThreshold;
@@ -25,15 +27,24 @@ namespace Lander {
         private PhysicsController physics;
         private float controlRate;
         private Vector3 movement;
-        private bool isBoost;
-        private int boostFrameCount = -1;
-        private int boostFrameCooldown = -1;
+        
+        private float boostPowerRate;
+        private InputData.EBoostState boostState;
+        private int targetBoostDirection;                
+
+        private int inputWaitFrameCount = -1;        
         private int deathFrameCooldown = -1;
+
+        private Transform arrowUI; // TODO: move to a UI script
 
         public void Initialize(Game game) {
             physics = GetComponent<PhysicsController>();            
             gameObject.layer = (int)Mathf.Log(physicsLayer, 2);
             physics.Layer = physicsLayer;
+            targetBoostDirection = 1;
+
+            arrowUI = transform.Find("Arrow");
+            arrowUI.gameObject.SetActive(false);
         }
 
         public void OnFixedTick(Game game, float dt) {
@@ -47,19 +58,36 @@ namespace Lander {
 
         public void OnTick(Game game, float dt) {
             if (game.CurrentState == Game.PLAY_STATE) {
-                if (isBoost) {                
-                    physics.AddAcceleration(EvaluateBoost(physics.CurrentVelocity));
-                    controlRate = 0;                
-                    movement = Vector3.zero;
-                    isBoost = false;
-                    boostFrameCount = 0;
-                }
+                switch (boostState) {
+                    case InputData.EBoostState.PRESSED:
+                        boostPowerRate = Mathf.Clamp01(boostPowerRate + (dt * boostAngleSpeed));
+
+                        var minBoostDir = Vector3.Lerp(Vector3.up, targetBoostDirection * Vector3.right, boostMinimumDirection);
+                        var maxBoostDir = Vector3.Lerp(Vector3.up, targetBoostDirection * Vector3.right, boostMaximumDirection);
+
+                        var boostDirection = Vector3.Lerp(minBoostDir, maxBoostDir, boostPowerRate).normalized;
+
+                        arrowUI.gameObject.SetActive(true);
+                        arrowUI.right = boostDirection.normalized;                        
+                        break;
+                    case InputData.EBoostState.RELEASED:
+                        physics.AddAcceleration(EvaluateBoost());
+                        controlRate = 0;                
+                        movement = Vector3.zero;
+                        inputWaitFrameCount = 0;
+                        boostState = InputData.EBoostState.NONE;
+                        boostPowerRate = 0;
+                        arrowUI.gameObject.SetActive(false);
+                        break;
+                }                
                 
-                if (boostFrameCount >= 0 && boostFrameCount <= boostFrames) {                
-                    boostFrameCount++;
+                if (inputWaitFrameCount >= 0 && inputWaitFrameCount <= inputWaitFrames) {                
+                    inputWaitFrameCount++;
                 } else {
-                    boostFrameCount = -1;
-                }  
+                    inputWaitFrameCount = -1;
+                }
+
+                // obstacle hit check  
                 var obstacleHit = Physics2D.OverlapBox(transform.position, physics.SizeWithCast + Vector3.one * 0.1f, 0, ~physicsLayer);                
 
                 // death check            
@@ -68,7 +96,6 @@ namespace Lander {
                         // player animation, return to checkpoint                                            
                         game.CurrentState = Game.DEATH_STATE;
                         deathFrameCooldown = deathTriggerWaitFrames;
-                        Debug.Log(deathFrameCooldown);
                         return;
                     }
                 }
@@ -98,6 +125,9 @@ namespace Lander {
 
         private void EvaluateControlRate(Vector3 movement, float dt) {
             // add to control dt
+            if (movement.x > 0) targetBoostDirection = 1;
+            else if (movement.x < 0) targetBoostDirection = -1;
+
             if (movement.magnitude > 0) {
                 controlRate += dt;
                 controlRate = Mathf.Clamp01(controlRate);
@@ -107,18 +137,14 @@ namespace Lander {
             }
         }
         
-        private Vector3 EvaluateBoost(Vector3 currentVelocity) {
-            var leftBoostDirection = Vector3.Lerp(Vector3.up, -Vector3.right, boostDirectionControlValue).normalized;
-            var rightBoostDirection = Vector3.Lerp(Vector3.up, Vector3.right, boostDirectionControlValue).normalized; 
-            var boostDirection = Vector3.zero;
+        private Vector3 EvaluateBoost() {
+            var minBoostDir = Vector3.Lerp(Vector3.up, targetBoostDirection * Vector3.right, boostMinimumDirection);
+            var maxBoostDir = Vector3.Lerp(Vector3.up, targetBoostDirection * Vector3.right, boostMaximumDirection);
 
-            if (currentVelocity.y > 0) {            
-                boostDirection = (Vector3.Dot(currentVelocity.normalized, Vector3.right) > 0) ? rightBoostDirection : leftBoostDirection;  
-            } else {
-                boostDirection = Random.Range(0, 2) == 0 ? Vector3.Lerp(Vector3.up, Vector3.right, boostDirectionControlValue).normalized : Vector3.Lerp(Vector3.up, -Vector3.right, boostDirectionControlValue).normalized;                             
-            }            
-            
-            var boostAcceleration = boostDirection.normalized * boostSpeed;
+            var boostDirection = Vector3.Lerp(minBoostDir, maxBoostDir, boostPowerRate).normalized;
+            var boostSpeed = Mathf.Lerp(0, boostMoveSpeed, boostPowerRate);                                                            
+
+            var boostAcceleration = boostDirection * boostSpeed;
 
             return boostAcceleration;
         }
@@ -126,9 +152,9 @@ namespace Lander {
         void IInput.Notify(InputData data) {
             if (movement.x != data.Movement.x) controlRate = 0;
             
-            if (boostFrameCount < 0) {
+            if (inputWaitFrameCount < 0) {
                 movement = data.Movement; 
-                isBoost = data.Boost;
+                boostState = data.BoostState;
             }
 
             if (movement.x < 0) {
@@ -140,15 +166,27 @@ namespace Lander {
 
 #if UNITY_EDITOR
         private void OnDrawGizmos() {            
-                // draw target velocity
-                Gizmos.color = Color.cyan;
-                Gizmos.DrawLine(transform.position, transform.position + ( Vector3.Lerp(Vector3.up, Vector3.right, flightDirectionControlValue).normalized * 0.5f ));
-                Gizmos.DrawLine(transform.position, transform.position + ( Vector3.Lerp(Vector3.up, -Vector3.right, flightDirectionControlValue).normalized * 0.5f ));
+            // draw target velocity
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(transform.position, transform.position + ( Vector3.Lerp(Vector3.up, Vector3.right, flightDirectionControlValue).normalized * 0.5f ));
+            Gizmos.DrawLine(transform.position, transform.position + ( Vector3.Lerp(Vector3.up, -Vector3.right, flightDirectionControlValue).normalized * 0.5f ));
 
-                Gizmos.color = Color.gray;
-                Gizmos.DrawLine(transform.position, transform.position + ( Vector3.Lerp(Vector3.up, Vector3.right, boostDirectionControlValue).normalized * 0.5f ));
-                Gizmos.DrawLine(transform.position, transform.position + ( Vector3.Lerp(Vector3.up, -Vector3.right, boostDirectionControlValue).normalized * 0.5f ));
-            }
+            Gizmos.color = Color.white;
+            Gizmos.DrawLine(transform.position, transform.position + ( Vector3.Lerp(Vector3.up, Vector3.right, boostMaximumDirection).normalized * 0.5f ));
+            Gizmos.DrawLine(transform.position, transform.position + ( Vector3.Lerp(Vector3.up, -Vector3.right, boostMaximumDirection).normalized * 0.5f ));
+            
+            Gizmos.color = Color.black;
+            Gizmos.DrawLine(transform.position, transform.position + ( Vector3.Lerp(Vector3.up, Vector3.right, boostMinimumDirection).normalized * 0.5f ));
+            Gizmos.DrawLine(transform.position, transform.position + ( Vector3.Lerp(Vector3.up, -Vector3.right, boostMinimumDirection).normalized * 0.5f ));
+        
+            var minBoostDir = Vector3.Lerp(Vector3.up, targetBoostDirection * Vector3.right, boostMinimumDirection);
+            var maxBoostDir = Vector3.Lerp(Vector3.up, targetBoostDirection * Vector3.right, boostMaximumDirection);
+
+            var boostDirection = Vector3.Lerp(minBoostDir, maxBoostDir, boostPowerRate).normalized;
+
+            Gizmos.color = Color.grey;
+            Gizmos.DrawLine(transform.position, transform.position + ( boostDirection.normalized * 0.5f ));
+        }
 
 #endif
     }

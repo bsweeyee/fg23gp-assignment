@@ -9,6 +9,7 @@ namespace Lander {
         [SerializeField][Range(0, 1)] private float boostDirectionControlValue;
         [SerializeField] private float boostSpeed;
         [SerializeField] private float boostFrames = 30;
+        [SerializeField] private LayerMask layer;
 
         private PhysicsController physics;
         private float controlRate;
@@ -17,7 +18,9 @@ namespace Lander {
         private int boostFrameCount = -1;
 
         public void Initialize() {
-            physics = GetComponent<PhysicsController>();
+            physics = GetComponent<PhysicsController>();            
+            gameObject.layer = (int)Mathf.Log(layer, 2);
+            physics.Layer = layer;
         }
 
         public void FixedTick(float dt) {

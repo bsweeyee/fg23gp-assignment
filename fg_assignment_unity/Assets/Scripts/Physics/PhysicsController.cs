@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
@@ -25,11 +26,11 @@ namespace Lander {
 
 
             [Header("Collision raycasts")]
+            [SerializeField] private Vector3 size = Vector3.one;
             [SerializeField][Min(2)] private int numOfCasts = 3;
-            [SerializeField] private float raycastSkinWidth = 1;            
+            [SerializeField] private float raycastSkinWidth = 1;                        
 
-            private BoxCollider2D boxCollider;
-
+            private BoxCollider2D boxCollider2D;
             private Vector3 currentVelocity;
             private Vector3 externalAcceleration;
             private Vector3 inputDirection;
@@ -37,6 +38,7 @@ namespace Lander {
             private float controlRate;
             private float dragCoefficientRate = 1;
             private bool isGrounded;
+            private LayerMask layer;
 
             public Vector3 CurrentVelocity {
                 get {
@@ -68,8 +70,15 @@ namespace Lander {
                 }
             }
 
+            public LayerMask Layer {
+                set {
+                    layer = value;
+                }
+            }
+
             public void Initialize() {
-                boxCollider = GetComponent<BoxCollider2D>();
+                boxCollider2D = GetComponent<BoxCollider2D>();
+                boxCollider2D.size = size;
             }
 
             public void OnFixedTick(float dt) {
@@ -146,97 +155,82 @@ namespace Lander {
                 var vz = currentVelocity.z;
 
                 if ( Mathf.Abs(vx) <= 0.01f) { vx = 0; } 
-                
-                var size = boxCollider.size;
-                var heightDiff = size.y / numOfCasts;    
-                var widthDiff = size.x / numOfCasts;                            
-                var hitDifference = new List<Tuple<Vector3, Vector3>>();
+                                
+                var heightDiff = size.y / (numOfCasts-1);    
+                var widthDiff = size.x / (numOfCasts-1);                            
 
                 // raycast in direction of current x velocity direction
                 var xSign = (vx == 0) ? 0 : Mathf.Sign(vx); 
-                hitDifference = Cast(new Vector3(0, heightDiff, 0), new Vector3(xSign * size.x, -size.y, 0) , xSign * Vector3.right);
-                if (hitDifference.Count > 0) {            
-                    hitDifference = hitDifference.OrderBy( x => (x.Item1 - x.Item2).magnitude ).ToList();
-                    if (hitDifference.Count > 0 && (hitDifference[0].Item1 - hitDifference[0].Item2).magnitude <= 0.01f) {
-                        var mainPosition = hitDifference[0].Item2 - xSign * new Vector3(size.x / 2, 0, 0);
-                        RaycastHit2D hitPos;
-                        bool isHit = GetCollisionPoint(mainPosition, size.x, xSign * Vector3.right, out hitPos);
-                        
-                        if (isHit && !isGrounded) {
-                            vx = -xSign * ((size.x / 2) - xSign * (hitPos.point.x - mainPosition.x) + 0.001f);                    
-                        }                                                                                           
-                    }          
-                }
+                RaycastHit2D hitX;
+                var isHit2DX = Cast2D(new Vector3(0, heightDiff, 0), new Vector3(xSign * size.x, -size.y, 0) , xSign * Vector3.right, out hitX);
+                if (isHit2DX) {
+                    vx = (hitX.distance - raycastSkinWidth) * xSign;
+                }                
 
                 // raycast to check if anything in the y direction is hit and find the cast that is has the shortest distance 
-                var ySign = (vy == 0) ? 0 : Mathf.Sign(vy);
-                hitDifference.Clear();
-                hitDifference = Cast(new Vector3(widthDiff, 0, 0), new Vector3(-size.x, ySign == 0? -1 : ySign * size.y, 0), ySign * Vector3.up);
-
-                if (hitDifference.Count > 0) { 
-                    hitDifference = hitDifference.OrderBy( x => (x.Item1 - x.Item2).magnitude ).ToList();                       
-                        
-                    if ((hitDifference[0].Item1 - hitDifference[0].Item2).magnitude <= 0.01f) {
-                        var mainPosition = hitDifference[0].Item2 - ySign * new Vector3(0, size.y / 2, 0);
-                        RaycastHit2D hitPos;
-                        var isHit = GetCollisionPoint(mainPosition, size.y, ySign * Vector3.up, out hitPos);
-                        
-                        if (isHit) {
-                            if (ySign < 0) {
-                                vx = 0;
-                                vy = (size.y / 2) - ySign * (hitPos.point.y - mainPosition.y);
-                            }                                                                                            
-                            else if (ySign > 0) {
-                                vy = 0;
-                            }
-                        }
-
-                        if (ySign < 0) { 
-                            isGrounded = true; 
-                            return new Vector3(vx, vy, vz); 
-                        }
-                        else if (ySign > 0) { 
-                            isGrounded = false; 
-                        } 
-                    }                                                 
+                var ySign = (vy == 0) ? 0 : Mathf.Sign(vy);                
+                RaycastHit2D hitY;
+                if (ySign == 0) {
+                    isGrounded = true;
                 }
-                else {            
-                    isGrounded = false;
-                }                    
+                else {
+                    var isHit2DY = Cast2D(new Vector3(widthDiff, 0, 0), new Vector3(-size.x, ySign * size.y, 0), ySign * Vector3.up, out hitY);
+                    if (isHit2DY) {                    
+                        vy = (hitY.distance - raycastSkinWidth) * ySign;
+                        if (ySign < 0) { 
+                            vx = 0;
+                            isGrounded = true;                         
+                        }
+                        else {
+                            vy = 0;
+                            isGrounded = false;
+                        }                                         
+                    }
+                    else {
+                        isGrounded = false;
+                    }
+                }
 
-                if (vy > 0) isGrounded = false;
+                // check overlap                
+                var hitCollider = Physics2D.OverlapBox(transform.position, size, 0, ~layer);
+                if (hitCollider) {
+                    var separation = hitCollider.Distance(boxCollider2D);
+                    // Debug.Log($"separation: {separation.normal}, {separation.distance}");
+                    var s = -(Vector3)separation.normal * separation.distance;
+                    vx += s.x;
+                    vy += s.y;
+                    vz += s.z;
+                }                
 
                 return new Vector3(vx, vy, vz);
             }
 
-            private bool GetCollisionPoint(Vector3 mainPosition, float minCastSize, Vector3 castDirection, out RaycastHit2D point) {
-                var hitInfos = Physics2D.RaycastAll(mainPosition, castDirection, minCastSize + raycastSkinWidth);
-                hitInfos = hitInfos.Where(x => x.collider.gameObject != gameObject).OrderBy( x => ((Vector3) x.point - mainPosition).magnitude ).ToArray();
-                // Debug.Log($"{castDirection}, {hitInfos.Length}");                
-                if (hitInfos.Length > 0) point = hitInfos[0];
-                else point = new RaycastHit2D();                
-                return hitInfos.Length > 0;
-            }
-
-            private List<Tuple<Vector3, Vector3>> Cast(Vector3 interval, Vector3 size, Vector3 castDirection) {
-                var hitDifference = new List<Tuple<Vector3, Vector3>>();
+            private bool Cast2D(Vector3 interval, Vector3 size, Vector3 castDirection, out RaycastHit2D hit) {
+                hit = new RaycastHit2D();
+                hit.distance = float.MaxValue;
+                bool isHit = false;
                 for(int i = 0; i < numOfCasts; i++) {
-                    var pos = transform.position + (Vector3)size / 2 + interval * i;  
-                    var hitInfos = Physics2D.RaycastAll(pos, castDirection, raycastSkinWidth);
-                    var orderedHits = hitInfos.Where(x => x.collider.gameObject != gameObject).OrderBy( x => ((Vector3) x.point - pos).magnitude ).ToArray();                        
-                    foreach(var hit in orderedHits) {
-                        hitDifference.Add(new Tuple<Vector3, Vector3>(hit.point, pos));                                                 
+                    var pos = transform.position + ((Vector3)size / 2) + interval * i;  
+                    var testHit = Physics2D.Raycast(pos, castDirection, raycastSkinWidth, ~layer);                    
+                    if (testHit.collider) {
+                        if (testHit.collider != null && testHit.distance <= hit.distance) {
+                            Debug.Log($"cast: {i}, {hit.distance}, {testHit.distance}");
+                            hit = testHit;
+                        }
+                        isHit = true;                            
                     }
                 }
-                return hitDifference;
+                return isHit;                                
             }
         
         #if UNITY_EDITOR
-            private void OnDrawGizmos() {
-                if(boxCollider == null) boxCollider = GetComponent<BoxCollider2D>();
-                var size = boxCollider.size;
+            private void OnDrawGizmos() {                
                 var widthDiff = size.x / (numOfCasts-1);
                 var ySign = Mathf.Sign(currentVelocity.y);
+
+                // draw collision box
+                Gizmos.color = Color.green;
+                Gizmos.DrawWireCube(transform.position, size);
 
                 // y cast
                 for(int i = 0; i < numOfCasts; i++) {

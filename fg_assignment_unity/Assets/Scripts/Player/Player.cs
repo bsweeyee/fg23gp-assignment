@@ -17,7 +17,7 @@ namespace Lander {
         private bool isBoost;
         private int boostFrameCount = -1;
 
-        public void Initialize() {
+        public void Initialize(Game game) {
             physics = GetComponent<PhysicsController>();            
             gameObject.layer = (int)Mathf.Log(layer, 2);
             physics.Layer = layer;

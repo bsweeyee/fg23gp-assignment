@@ -214,7 +214,7 @@ namespace Lander {
                     var testHit = Physics2D.Raycast(pos, castDirection, raycastSkinWidth, ~layer);                    
                     if (testHit.collider) {
                         if (testHit.collider != null && testHit.distance <= hit.distance) {
-                            Debug.Log($"cast: {i}, {hit.distance}, {testHit.distance}");
+                            // Debug.Log($"cast: {i}, {hit.distance}, {testHit.distance}");
                             hit = testHit;
                         }
                         isHit = true;                            

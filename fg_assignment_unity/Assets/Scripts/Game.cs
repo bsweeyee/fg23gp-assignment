@@ -12,6 +12,10 @@ namespace Lander {
         private IPhysics[] physics;
         private IEntities[] entities;
 
+        public IEntities[] Entities {
+            get { return entities; }
+        }
+
         public void Initialize() {
             if (instance == null) {
                 instance = this;
@@ -35,7 +39,7 @@ namespace Lander {
         void InitEntities() {
             entities = FindObjectsOfType<MonoBehaviour>().OfType<IEntities>().ToArray();
             foreach(var entity in entities) {
-                entity.Initialize();
+                entity.Initialize(this);
             }
         }
 

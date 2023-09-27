@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Lander {
     public interface IEntities {
-        public void Initialize();
+        public void Initialize(Game game);
         public void Tick(float dt);
         public void FixedTick(float dt);
     }

@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using Lander.Physics;
 using Lander.GameState;
-using Unity.VisualScripting;
+using UnityEngine.UI;
 
 namespace Lander {
-    public class Player : MonoBehaviour, IEntities, IInput {
+    public class Player : MonoBehaviour, IEntities, IInput, IDebug {
         [Header("Settings")]
         [SerializeField] private LayerMask physicsLayer;
         [SerializeField] private float inputWaitFrames = 30;
@@ -20,6 +20,12 @@ namespace Lander {
         [SerializeField] private float boostAngleSpeed;
         [SerializeField] private float boostMoveSpeed;
 
+        [Header("Energy")]
+        [SerializeField] private float maxEnergy;
+        [SerializeField] private float energyBoostReductionRate;
+        [SerializeField] private float energyFlightReductionRate;
+        [SerializeField] private float energyRecoveryRate;
+
         [Header("Death")]
         [SerializeField] private float speedDeathThreshold;
         [SerializeField] private int deathTriggerWaitFrames = 30;
@@ -30,12 +36,16 @@ namespace Lander {
         
         private float boostPowerRate;
         private InputData.EBoostState boostState;
-        private int targetBoostDirection;                
+        private int targetBoostDirection;
+
+        private float currentEnergyLevel;                
 
         private int inputWaitFrameCount = -1;        
         private int deathFrameCooldown = -1;
 
-        private Transform arrowUI; // TODO: move to a UI script
+        // TODO: move to a UI scripts
+        private Transform arrowUI;
+        private Image energyUI;
 
         public void Initialize(Game game) {
             physics = GetComponent<PhysicsController>();            
@@ -43,16 +53,30 @@ namespace Lander {
             physics.Layer = physicsLayer;
             targetBoostDirection = 1;
 
+            currentEnergyLevel = maxEnergy;
+
             arrowUI = transform.Find("Arrow");
             arrowUI.gameObject.SetActive(false);
+
+            energyUI = transform.Find("Energy/Bar").GetComponent<Image>();
         }
 
         public void OnFixedTick(Game game, float dt) {
             if (game.CurrentState == Game.PLAY_STATE) {
+                if (currentEnergyLevel <= 0) {
+                    physics.InputDirection = Vector3.zero;
+                    physics.ControlRate = 0;
+                    return;
+                }
+
                 EvaluateControlRate(movement, dt);
                 
                 physics.InputDirection = movement;
                 physics.ControlRate = controlRate;
+
+                if (movement.magnitude > 0) {
+                    currentEnergyLevel = Mathf.Clamp(currentEnergyLevel - (dt * energyFlightReductionRate), 0, maxEnergy);
+                }
             }
         }
 
@@ -60,7 +84,10 @@ namespace Lander {
             if (game.CurrentState == Game.PLAY_STATE) {
                 switch (boostState) {
                     case InputData.EBoostState.PRESSED:
+                        if (currentEnergyLevel <= 0) break;                        
+
                         boostPowerRate = Mathf.Clamp01(boostPowerRate + (dt * boostAngleSpeed));
+                        currentEnergyLevel = (boostPowerRate < 1) ? Mathf.Clamp(currentEnergyLevel - (dt * energyBoostReductionRate), 0, maxEnergy) : currentEnergyLevel;
 
                         var minBoostDir = Vector3.Lerp(Vector3.up, targetBoostDirection * Vector3.right, boostMinimumDirection);
                         var maxBoostDir = Vector3.Lerp(Vector3.up, targetBoostDirection * Vector3.right, boostMaximumDirection);
@@ -105,10 +132,14 @@ namespace Lander {
                     if (obstacleHit != null) {
                         var chk = obstacleHit.GetComponent<Checkpoint>();                    
                         if (chk != null) chk.SetCurrentSpawn();
+
+                        if (boostState != InputData.EBoostState.PRESSED) currentEnergyLevel = Mathf.Clamp(currentEnergyLevel + (dt * energyRecoveryRate), 0, maxEnergy);                        
                     }
                 }
 
-                deathFrameCooldown = Mathf.Clamp(deathFrameCooldown - 1, 0, deathTriggerWaitFrames);                                 
+                deathFrameCooldown = Mathf.Clamp(deathFrameCooldown - 1, 0, deathTriggerWaitFrames);
+
+                energyUI.fillAmount = Mathf.InverseLerp(0, maxEnergy, currentEnergyLevel);                                 
             }
         }
 
@@ -186,6 +217,12 @@ namespace Lander {
 
             Gizmos.color = Color.grey;
             Gizmos.DrawLine(transform.position, transform.position + ( boostDirection.normalized * 0.5f ));
+        }
+
+        public void OnDrawGUI() {
+            string energy = $"energy level: {currentEnergyLevel}";
+
+            GUILayout.Label(energy);
         }
 
 #endif

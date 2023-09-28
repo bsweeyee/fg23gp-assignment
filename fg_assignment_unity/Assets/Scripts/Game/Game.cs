@@ -14,7 +14,7 @@ namespace Lander {
         public static DeathState DEATH_STATE;
 
         public static Game instance;
-                
+
         private InputController inputController;
         private IEntities[] entities;
         private IPhysics[] physics;
@@ -26,11 +26,11 @@ namespace Lander {
             set {
                 var previousState = currentState;
                 currentState = value;
-                
+
                 if (currentState != null) {
                     currentState.OnEnter(this, previousState, currentState);
                     currentState.OnExit(this, previousState, currentState);
-                }                
+                }
             }
         }
 
@@ -42,8 +42,8 @@ namespace Lander {
             if (instance == null) {
                 instance = this;
                 DontDestroyOnLoad(gameObject);
-                
-                InitInput();                
+
+                InitInput();
                 InitGameState();
                 InitPhysics();
                 InitDebug();
@@ -56,8 +56,8 @@ namespace Lander {
 
         void InitInput() {
             inputController = FindObjectOfType<InputController>();
-            inputController.Initialize();
-        }        
+            inputController?.Initialize();
+        }
 
         void InitPhysics() {
             physics = FindObjectsOfType<MonoBehaviour>().OfType<IPhysics>().ToArray();
@@ -71,21 +71,21 @@ namespace Lander {
 
             START_STATE = new StartState();
             PLAY_STATE = new PlayState();
-            DEATH_STATE = new DeathState();            
+            DEATH_STATE = new DeathState();
 
             currentState = PLAY_STATE;
-            
+
             START_STATE.Initialize(this);
             PLAY_STATE.Initialize(this);
             DEATH_STATE.Initialize(this);
         }
-        
+
         void InitDebug() {
-            debugs = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<IDebug>().ToArray();            
+            debugs = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<IDebug>().ToArray();
         }
 
         void Update() {
-            var dt = Time.deltaTime;           
+            var dt = Time.deltaTime;
             currentState.OnTick(this, dt);
 
             foreach(var p in physics) {
@@ -113,8 +113,8 @@ namespace Lander {
 
         public void OnDrawGUI() {
             string currentState = $"current state: {this.currentState.ToString()}";
-                
-            GUILayout.Label(currentState);                
+
+            GUILayout.Label(currentState);
         }
 #endif
     }

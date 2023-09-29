@@ -9,14 +9,27 @@ public interface ICheckpoint {
 
 public abstract class Checkpoint : MonoBehaviour, ICheckpoint {    
     [SerializeField] protected Vector3 spawnLocalPosition;
-    public static Vector3 CurrentSpawnWorldPosition;
-
-    public Vector3 SpawnWorldPosition {
-        get { return transform.TransformPoint(spawnLocalPosition); }
+    
+    public static Vector3 CurrentSpawnWorldPosition {
+        get { return currentSpawnWorldPosition; }
+        set {
+            if (value != Vector3.zero) {
+                currentSpawnWorldPosition = value;
+            }
+        }
     }
 
-    public void SetCurrentSpawn() {
-        CurrentSpawnWorldPosition = transform.TransformPoint(spawnLocalPosition);
+    private static Vector3 currentSpawnWorldPosition;
+
+    public Vector3 SpawnWorldPosition {
+        get { 
+            if (spawnLocalPosition == Vector3.zero) return Vector3.zero;  
+            return transform.TransformPoint(spawnLocalPosition); 
+        }
+    }
+
+    public void SetLocalSpawnPoint(Vector3 spawnPointLocal) {
+        spawnLocalPosition = spawnPointLocal;
     }
 
     public static void Respawn(Transform body) {
@@ -27,7 +40,9 @@ public abstract class Checkpoint : MonoBehaviour, ICheckpoint {
 
     private void OnDrawGizmos() {
         Gizmos.color = (CurrentSpawnWorldPosition == SpawnWorldPosition) ? Color.green : Color.red;
-        Gizmos.DrawWireSphere(transform.TransformPoint(spawnLocalPosition), 0.5f);        
+        if (SpawnWorldPosition != Vector3.zero) {
+            Gizmos.DrawWireSphere(transform.TransformPoint(spawnLocalPosition), 0.5f);        
+        }
     }
     
     #endif    

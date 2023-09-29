@@ -74,10 +74,7 @@ namespace Lander {
             DEATH_STATE = new DeathState();
 
             currentState = PLAY_STATE;
-
-            START_STATE.Initialize(this);
-            PLAY_STATE.Initialize(this);
-            DEATH_STATE.Initialize(this);
+            currentState.Initialize(this);
         }
 
         void InitDebug() {

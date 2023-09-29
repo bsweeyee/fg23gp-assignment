@@ -131,7 +131,9 @@ namespace Lander {
                 if (physics.IsGrounded) {
                     if (obstacleHit != null) {
                         var chk = obstacleHit.GetComponent<Checkpoint>();                    
-                        if (chk != null) chk.SetCurrentSpawn();
+                        if (chk != null) {
+                            Checkpoint.CurrentSpawnWorldPosition = chk.SpawnWorldPosition;                             
+                        }
 
                         if (boostState != InputData.EBoostState.PRESSED) currentEnergyLevel = Mathf.Clamp(currentEnergyLevel + (dt * energyRecoveryRate), 0, maxEnergy);                        
                     }

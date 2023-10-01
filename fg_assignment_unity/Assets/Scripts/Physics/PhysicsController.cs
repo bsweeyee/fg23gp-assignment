@@ -4,6 +4,7 @@ using System.Linq;
 using System.Xml;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 
@@ -41,6 +42,9 @@ namespace Lander {
             private bool isGrounded;
             private LayerMask layer;
 
+            private UnityEvent onFirstGrounded;
+            private UnityEvent onFirstUnGrounded;
+
             public Vector3 CurrentVelocity {
                 get {
                     return currentVelocity;
@@ -69,6 +73,12 @@ namespace Lander {
                 get {
                     return isGrounded;
                 }
+                protected set {
+                    if (isGrounded == false && value == true) onFirstGrounded.Invoke();
+                    if (isGrounded == true && value == false) onFirstUnGrounded.Invoke();
+
+                    isGrounded = value;
+                }
             }
 
             public LayerMask Layer {
@@ -85,20 +95,35 @@ namespace Lander {
                 get { return size + Vector3.one * raycastSkinWidth; }
             }            
 
-            public void Initialize() {
-                boxCollider2D = GetComponent<BoxCollider2D>();
-                boxCollider2D.size = size;
+            public UnityEvent OnFirstGrounded {
+                get { return onFirstGrounded; }
             }
 
-            public void OnFixedTick(float dt) {
+            public UnityEvent OnFirstUnGrounded {
+                get { return onFirstUnGrounded; }
+            }
+
+            public void EarlyInitialize(Game game) {
+                boxCollider2D = GetComponent<BoxCollider2D>();
+                boxCollider2D.size = size;
+
+                onFirstGrounded = new UnityEvent();
+                onFirstUnGrounded = new UnityEvent();
+            }
+
+            public void LateInitialize(Game game) {
+                
+            }
+
+            public void OnFixedTick(Game game, float dt) {
                 currentVelocity = EvaluateAcceleration(dt);        
                 currentVelocity = EvaluateCollision();
 
                 transform.position += currentVelocity;
-                if (isGrounded) currentVelocity = new Vector3(currentVelocity.x, 0, currentVelocity.z);
+                if (IsGrounded) currentVelocity = new Vector3(currentVelocity.x, 0, currentVelocity.z);
             }
 
-            public void OnTick(float dt) {
+            public void OnTick(Game game, float dt) {
 
             }
 
@@ -159,7 +184,7 @@ namespace Lander {
                 finalAcceleration += externalAcceleration;
                 externalAcceleration *= (1 - externalAccelerationFalloff); // we reduce external acceleration by factor 
                 
-                if(!isGrounded && Mathf.Abs(vy) < maximumVelocity.y) {
+                if(!IsGrounded && Mathf.Abs(vy) < maximumVelocity.y) {
                     finalAcceleration += gravity;
                 }                
 
@@ -185,10 +210,10 @@ namespace Lander {
                 }                
 
                 // raycast to check if anything in the y direction is hit and find the cast that is has the shortest distance 
-                var ySign = (Mathf.Abs(vy) <= 0.0005f && isGrounded) ? 0 : Mathf.Sign(vy);                
+                var ySign = (Mathf.Abs(vy) <= 0.00025f && IsGrounded) ? 0 : Mathf.Sign(vy);                
                 RaycastHit2D hitY;
                 if (ySign == 0) {                    
-                    isGrounded = true;
+                    IsGrounded = true;
                 }
                 else {
                     var isHit2DY = Cast2D(new Vector3(widthDiff, 0, 0), new Vector3(-size.x, ySign * size.y, 0), ySign * Vector3.up, out hitY);
@@ -196,15 +221,15 @@ namespace Lander {
                         vy = (hitY.distance - raycastSkinWidth) * ySign;
                         if (ySign < 0) { 
                             vx = 0;                                                                                    
-                            isGrounded = true;                         
+                            IsGrounded = true;                         
                         }
                         else {
                             vy = 0;                            
-                            isGrounded = false;
+                            IsGrounded = false;
                         }                                         
                     }
                     else {                        
-                        isGrounded = false;
+                        IsGrounded = false;
                     }
                 }
 

@@ -8,7 +8,8 @@ using UnityEngine;
 namespace Lander {
     namespace GameState {
         public interface IBaseGameState {
-            public void Initialize(Game game);
+            public void EarlyInitialize(Game game);
+            public void LateInitialize(Game game);
             public void OnEnter(Game game, IBaseGameState previous, IBaseGameState current);
             public void OnExit(Game game, IBaseGameState previous, IBaseGameState current);
             public void OnTick(Game game, float dt);
@@ -18,12 +19,20 @@ namespace Lander {
         public abstract class BaseGameState : IBaseGameState {            
             private Game game;
 
-            public virtual void Initialize(Game game) {                
+            public virtual void EarlyInitialize(Game game) {                
                 foreach(var entity in game.Entities) {                    
-                    entity.Initialize(game);
+                    entity.EarlyInitialize(game);
                 }
                 this.game = game;                
             }
+
+            public virtual void LateInitialize(Game game) {
+                foreach(var entity in game.Entities) {                    
+                    entity.LateInitialize(game);
+                }
+                this.game = game;
+            }
+
             public virtual void OnEnter(Game game, IBaseGameState previous, IBaseGameState current) {
                 foreach(var obs in game.Entities) {
                     obs.OnEnter(game, previous, current);

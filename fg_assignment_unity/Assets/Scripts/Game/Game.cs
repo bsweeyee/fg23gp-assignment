@@ -15,8 +15,10 @@ namespace Lander {
 
         public static Game instance;
 
+        [SerializeField][Range(0, 1)] private float timeFactor = 1;
+
         private InputController inputController;
-        private IEntities[] entities;
+        private IGameStateEntity[] entities;
         private IPhysics[] physics;
         private IDebug[] debugs;
         private BaseGameState currentState;
@@ -34,7 +36,7 @@ namespace Lander {
             }
         }
 
-        public IEntities[] Entities {
+        public IGameStateEntity[] Entities {
             get { return entities; }
         }
 
@@ -43,42 +45,42 @@ namespace Lander {
                 instance = this;
                 DontDestroyOnLoad(gameObject);
 
-                InitInput();
-                InitGameState();
-                InitPhysics();
-                InitDebug();
+                EarlyInitialize();
+                LateInitialize();
 
                 return;
             }
 
             Destroy(gameObject);
-        }
+        }       
 
-        void InitInput() {
+        void EarlyInitialize() {
             inputController = FindObjectOfType<InputController>();
-            inputController?.Initialize();
-        }
+            inputController?.EarlyInitialize(this);
 
-        void InitPhysics() {
             physics = FindObjectsOfType<MonoBehaviour>().OfType<IPhysics>().ToArray();
             foreach(var p in physics) {
-                p.Initialize();
+                p.EarlyInitialize(this);
             }
-        }
 
-        void InitGameState() {
-            entities = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<IEntities>().ToArray();
+            entities = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<IGameStateEntity>().ToArray();
 
             START_STATE = new StartState();
             PLAY_STATE = new PlayState();
             DEATH_STATE = new DeathState();
 
             currentState = PLAY_STATE;
-            currentState.Initialize(this);
+            currentState.EarlyInitialize(this);
+
+            debugs = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<IDebug>().ToArray();
         }
 
-        void InitDebug() {
-            debugs = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<IDebug>().ToArray();
+        void LateInitialize() {
+            inputController?.LateInitialize(this);
+            foreach(var p in physics) {
+                p.LateInitialize(this);
+            }
+            currentState.LateInitialize(this);
         }
 
         void Update() {
@@ -86,16 +88,16 @@ namespace Lander {
             currentState.OnTick(this, dt);
 
             foreach(var p in physics) {
-                p.OnTick(dt);
+                p.OnTick(this, dt);
             }
         }
 
         void FixedUpdate()  {
-            var dt = Time.fixedDeltaTime;
+            var dt = Time.fixedDeltaTime * timeFactor;
             currentState.OnFixedTick(this, dt);
 
             foreach(var p in physics) {
-                p.OnFixedTick(dt);
+                p.OnFixedTick(this, dt);
             }
         }
 

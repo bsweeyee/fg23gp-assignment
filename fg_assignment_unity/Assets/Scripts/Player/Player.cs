@@ -4,12 +4,14 @@ using UnityEngine;
 using Lander.Physics;
 using Lander.GameState;
 using UnityEngine.UI;
+using Unity.VisualScripting.Antlr3.Runtime.Tree;
+using UnityEngine.Animations;
+using Unity.Mathematics;
 
 namespace Lander {
-    public class Player : MonoBehaviour, IEntities, IInput, IDebug {
+    public class Player : MonoBehaviour, IGameStateEntity, IInput, IDebug {
         [Header("Settings")]
         [SerializeField] private LayerMask physicsLayer;
-        [SerializeField] private float inputWaitFrames = 30;
 
         [Header("Sprite")]
         [SerializeField] private Sprite normal;
@@ -23,6 +25,8 @@ namespace Lander {
         [SerializeField][Range(0, 1)] private float boostMaximumDirection;
         [SerializeField] private float boostAngleSpeed;
         [SerializeField] private float boostMoveSpeed;
+        [SerializeField] private int numOfBoosts;
+        [SerializeField] private bool isAllowAirBoost;
 
         [Header("Energy")]
         [SerializeField] private float maxEnergy;
@@ -32,6 +36,7 @@ namespace Lander {
 
         [Header("Death")]
         [SerializeField] private float speedDeathThreshold;
+        [SerializeField] private float deathAnimationTime = 1;
         [SerializeField] private int deathTriggerWaitFrames = 30;
 
         private Animator animator;
@@ -45,28 +50,38 @@ namespace Lander {
         private int targetBoostDirection;
 
         private float currentEnergyLevel;                
+        private int currentNumOfBoosts;
 
-        private int inputWaitFrameCount = -1;        
         private int deathFrameCooldown = -1;
+        private float deathTimePeriod = 0;
 
         // TODO: move to a UI scripts
         private Transform arrowUI;
         private Image energyUI;
+        private Game game;
 
-        public void Initialize(Game game) {
+        public void EarlyInitialize(Game game) {
             physics = GetComponent<PhysicsController>();
             animator = GetComponentInChildren<Animator>();
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();            
-            gameObject.layer = (int)Mathf.Log(physicsLayer, 2);
-            physics.Layer = physicsLayer;
+            gameObject.layer = (int)Mathf.Log(physicsLayer, 2);                
+            
             targetBoostDirection = 1;
 
             currentEnergyLevel = maxEnergy;
+            currentNumOfBoosts = numOfBoosts;
 
             arrowUI = transform.Find("Arrow");
             arrowUI.gameObject.SetActive(false);
 
             energyUI = transform.Find("Energy/Bar").GetComponent<Image>();
+            this.game = game;
+        }
+
+        public void LateInitialize(Game game) {
+            physics.Layer = physicsLayer;
+            physics.OnFirstGrounded.AddListener( OnFirstGrounded );
+            physics.OnFirstUnGrounded.AddListener( OnFirstUnGrounded );
         }
 
         public void OnFixedTick(Game game, float dt) {
@@ -87,18 +102,15 @@ namespace Lander {
                 }
 
                 if (movement.x > 0) spriteRenderer.gameObject.transform.right = Vector3.right;
-                else if (movement.x < 0) spriteRenderer.gameObject.transform.right = -Vector3.right;
-
-                if (physics.IsGrounded) spriteRenderer.sprite = normal;
-                else spriteRenderer.sprite = air;
+                else if (movement.x < 0) spriteRenderer.gameObject.transform.right = -Vector3.right;                            
             }
         }
 
         public void OnTick(Game game, float dt) {
             if (game.CurrentState == Game.PLAY_STATE) {
-                switch (boostState) {
+                switch (boostState) {                   
                     case InputData.EBoostState.PRESSED:
-                        if (currentEnergyLevel <= 0) break;                        
+                        if (currentEnergyLevel <= 0) break;                                                
 
                         boostPowerRate = Mathf.Clamp01(boostPowerRate + (dt * boostAngleSpeed));
                         currentEnergyLevel = (boostPowerRate < 1) ? Mathf.Clamp(currentEnergyLevel - (dt * energyBoostReductionRate), 0, maxEnergy) : currentEnergyLevel;
@@ -107,70 +119,69 @@ namespace Lander {
                         var maxBoostDir = Vector3.Lerp(Vector3.up, targetBoostDirection * Vector3.right, boostMaximumDirection);
 
                         var boostDirection = Vector3.Lerp(minBoostDir, maxBoostDir, boostPowerRate).normalized;
+                        
+                        arrowUI.right = boostDirection.normalized;                                                
+                        break;                    
+                }                        
 
-                        arrowUI.gameObject.SetActive(true);
-                        arrowUI.right = boostDirection.normalized;
-
-                        animator.SetBool("isSqueeze", true);                        
-                        break;
-                    case InputData.EBoostState.RELEASED:
-                        physics.AddAcceleration(EvaluateBoost());
-                        controlRate = 0;                
-                        movement = Vector3.zero;
-                        inputWaitFrameCount = 0;
-                        boostState = InputData.EBoostState.NONE;
-                        boostPowerRate = 0;
-                        arrowUI.gameObject.SetActive(false);
-                        animator.SetBool("isSqueeze", false);
-                        break;
-                }                
+                var obstacleHit = Physics2D.OverlapBox(transform.position, physics.SizeWithCast + Vector3.one * 0.1f, 0, ~physicsLayer);               
                 
-                if (inputWaitFrameCount >= 0 && inputWaitFrameCount <= inputWaitFrames) {                
-                    inputWaitFrameCount++;
-                } else {
-                    inputWaitFrameCount = -1;
-                }
-
-                // obstacle hit check  
-                var obstacleHit = Physics2D.OverlapBox(transform.position, physics.SizeWithCast + Vector3.one * 0.1f, 0, ~physicsLayer);                
-
                 // death check            
                 if (obstacleHit != null) {                
                     if (deathFrameCooldown <= 0 && physics.CurrentVelocity.magnitude > speedDeathThreshold) {
                         // player animation, return to checkpoint                                            
                         game.CurrentState = Game.DEATH_STATE;
-                        deathFrameCooldown = deathTriggerWaitFrames;
                         return;
-                    }
-                }
+                    }                                    
+                }                              
 
-                // checkpoint save
-                if (physics.IsGrounded) {
-                    if (obstacleHit != null) {
+                deathFrameCooldown = Mathf.Clamp(deathFrameCooldown - 1, 0, deathTriggerWaitFrames);
+
+                // grounded check
+                if (physics.IsGrounded) {                    
+                    if (obstacleHit != null) {                        
+                        if (boostState != InputData.EBoostState.PRESSED) { 
+                            currentEnergyLevel = Mathf.Clamp(currentEnergyLevel + (dt * energyRecoveryRate), 0, maxEnergy);                            
+                        }
                         var chk = obstacleHit.GetComponent<Checkpoint>();                    
                         if (chk != null) {
                             Checkpoint.CurrentSpawnWorldPosition = chk.SpawnWorldPosition;                             
                         }
-
-                        if (boostState != InputData.EBoostState.PRESSED) currentEnergyLevel = Mathf.Clamp(currentEnergyLevel + (dt * energyRecoveryRate), 0, maxEnergy);                        
                     }
                 }
 
-                deathFrameCooldown = Mathf.Clamp(deathFrameCooldown - 1, 0, deathTriggerWaitFrames);
-
                 energyUI.fillAmount = Mathf.InverseLerp(0, maxEnergy, currentEnergyLevel);                                 
+            }
+            else if(game.CurrentState == Game.DEATH_STATE) {
+                
+                spriteRenderer.transform.rotation = Quaternion.AngleAxis(Mathf.Lerp(0, 270, deathTimePeriod / deathAnimationTime), transform.forward);
+
+                deathTimePeriod += dt;
+
+                if (deathTimePeriod > deathAnimationTime) {
+                    Checkpoint.Respawn(transform);                    
+                    game.CurrentState = Game.PLAY_STATE; 
+                }
             }
         }
 
         public void OnEnter(Game game, IBaseGameState previous, IBaseGameState current) {
             if (current.GetType() == typeof(DeathState)) {
-                physics.Reset();
-                Checkpoint.Respawn(transform);
-                game.CurrentState = Game.PLAY_STATE;                
+                animator.SetBool("isDead", true);
+                physics.Reset();                
             }
         }
 
         public void OnExit(Game game, IBaseGameState previous, IBaseGameState current) {
+            if (previous.GetType() == typeof(DeathState)) {
+                spriteRenderer.transform.rotation = Quaternion.identity;
+                targetBoostDirection = 1;
+                deathFrameCooldown = deathTriggerWaitFrames;
+                currentNumOfBoosts = numOfBoosts;
+                currentEnergyLevel = maxEnergy;
+                deathTimePeriod = 0;
+                animator.SetBool("isDead", false);
+            }
         }        
 
         private void EvaluateControlRate(Vector3 movement, float dt) {
@@ -198,21 +209,54 @@ namespace Lander {
 
             return boostAcceleration;
         }
+        
+        private void OnFirstGrounded() {
+            spriteRenderer.sprite = normal;                                                           
+            currentNumOfBoosts = numOfBoosts;
+        }
 
+        private void OnFirstUnGrounded() {
+            spriteRenderer.sprite = air;
+        }
+    
         void IInput.Notify(InputData data) {
             if (movement.x != data.Movement.x) controlRate = 0;
             
-            if (inputWaitFrameCount < 0) {
-                movement = data.Movement; 
-                boostState = data.BoostState;
+            if (boostState != InputData.EBoostState.PRESSED) movement = data.Movement;
+            
+            boostState = data.BoostState;                
+            if (boostState == InputData.EBoostState.PRESSED) {
+                if (currentNumOfBoosts <= 0) { boostState = InputData.EBoostState.NONE; }
+                if (!isAllowAirBoost && !physics.IsGrounded) { boostState = InputData.EBoostState.NONE; }             
             }
 
             if (movement.x < 0) {
                 physics.TargetFlightDirection = Vector3.Lerp(Vector3.up, -Vector3.right, flightDirectionControlValue).normalized;                
             } else if (movement.x > 0) {
                 physics.TargetFlightDirection = Vector3.Lerp(Vector3.up, Vector3.right, flightDirectionControlValue).normalized;                
+            }
+
+            if (game.CurrentState == Game.PLAY_STATE) {
+                switch (boostState) {                   
+                    case InputData.EBoostState.PRESSED:
+                        arrowUI.gameObject.SetActive(true);
+                        animator.SetBool("isSqueeze", true);                        
+                        break;
+                    case InputData.EBoostState.RELEASED:                        
+                        physics.AddAcceleration(EvaluateBoost());
+                        controlRate = 0;                
+                        boostPowerRate = 0;
+                        currentNumOfBoosts = Mathf.Clamp(0, int.MaxValue, currentNumOfBoosts - 1);
+                        movement = Vector3.zero;
+                        boostState = InputData.EBoostState.NONE;                        
+                        
+                        arrowUI.gameObject.SetActive(false);
+                        animator.SetBool("isSqueeze", false);
+                        break;
+                }
             }                    
         }
+
 
 #if UNITY_EDITOR
         private void OnDrawGizmos() {            

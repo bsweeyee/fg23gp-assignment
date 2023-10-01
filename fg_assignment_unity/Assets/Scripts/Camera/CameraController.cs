@@ -6,7 +6,7 @@ using System.Security;
 using UnityEngine;
 
 namespace Lander {
-    public class CameraController : MonoBehaviour, IEntities {
+    public class CameraController : MonoBehaviour, IGameStateEntity {
         [SerializeField] private float cameraSpeed = 0.5f;
         [SerializeField] private float maxCameraTargetDistance = 5;
         private Transform followTarget;
@@ -17,11 +17,14 @@ namespace Lander {
             }
         }
 
-         public void Initialize(Game game) {
+         public void EarlyInitialize(Game game) {
             var players = game.Entities.Where( x=> x.GetType() == typeof(Player) ).ToArray();            
             if (players.Length > 0 ) {
                 followTarget = (players[0] as Player).transform;
             }
+        }
+
+        public void LateInitialize(Game game) {        
         }
 
         public void OnFixedTick(Game game, float dt) {

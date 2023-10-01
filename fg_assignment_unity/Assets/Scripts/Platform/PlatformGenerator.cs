@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 
 [ExecuteInEditMode]
-public class PlatformGenerator : MonoBehaviour, IEntities {
+public class PlatformGenerator : MonoBehaviour, IGameStateEntity {
     struct TileBlockData {
         public Vector3 Centre;
         public Vector3 Size;
@@ -33,7 +33,7 @@ public class PlatformGenerator : MonoBehaviour, IEntities {
     private TilemapRenderer tMapRenderer;
 
     private List<Vector3Int> occupiedTilePositions;
-    public void Initialize(Game game) {
+    public void EarlyInitialize(Game game) {
         grid = GetComponentInChildren<Grid>();
         tMap = GetComponentInChildren<Tilemap>();
         tMapRenderer = GetComponentInChildren<TilemapRenderer>();
@@ -58,6 +58,10 @@ public class PlatformGenerator : MonoBehaviour, IEntities {
             platform.SetLocalSpawnPoint(localPlatformSpawnPoint);
         }
     }
+
+    public void LateInitialize(Game game) {        
+    }
+
     public void OnEnter(Game game, IBaseGameState previous, IBaseGameState current) {
 
     }

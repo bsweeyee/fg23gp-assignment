@@ -185,9 +185,9 @@ namespace Lander {
                 }                
 
                 // raycast to check if anything in the y direction is hit and find the cast that is has the shortest distance 
-                var ySign = (vy == 0) ? 0 : Mathf.Sign(vy);                
+                var ySign = (Mathf.Abs(vy) <= 0.0005f && isGrounded) ? 0 : Mathf.Sign(vy);                
                 RaycastHit2D hitY;
-                if (ySign == 0) {
+                if (ySign == 0) {                    
                     isGrounded = true;
                 }
                 else {
@@ -195,15 +195,15 @@ namespace Lander {
                     if (isHit2DY) {                    
                         vy = (hitY.distance - raycastSkinWidth) * ySign;
                         if (ySign < 0) { 
-                            vx = 0;
+                            vx = 0;                                                                                    
                             isGrounded = true;                         
                         }
                         else {
-                            vy = 0;
+                            vy = 0;                            
                             isGrounded = false;
                         }                                         
                     }
-                    else {
+                    else {                        
                         isGrounded = false;
                     }
                 }

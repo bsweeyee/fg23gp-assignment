@@ -11,6 +11,10 @@ namespace Lander {
         [SerializeField] private LayerMask physicsLayer;
         [SerializeField] private float inputWaitFrames = 30;
 
+        [Header("Sprite")]
+        [SerializeField] private Sprite normal;
+        [SerializeField] private Sprite air;
+
         [Header("Flight")]
         [SerializeField][Range(0, 1)] private float flightDirectionControlValue;
         
@@ -30,6 +34,8 @@ namespace Lander {
         [SerializeField] private float speedDeathThreshold;
         [SerializeField] private int deathTriggerWaitFrames = 30;
 
+        private Animator animator;
+        private SpriteRenderer spriteRenderer;
         private PhysicsController physics;
         private float controlRate;
         private Vector3 movement;
@@ -48,7 +54,9 @@ namespace Lander {
         private Image energyUI;
 
         public void Initialize(Game game) {
-            physics = GetComponent<PhysicsController>();            
+            physics = GetComponent<PhysicsController>();
+            animator = GetComponentInChildren<Animator>();
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();            
             gameObject.layer = (int)Mathf.Log(physicsLayer, 2);
             physics.Layer = physicsLayer;
             targetBoostDirection = 1;
@@ -77,6 +85,12 @@ namespace Lander {
                 if (movement.magnitude > 0) {
                     currentEnergyLevel = Mathf.Clamp(currentEnergyLevel - (dt * energyFlightReductionRate), 0, maxEnergy);
                 }
+
+                if (movement.x > 0) spriteRenderer.gameObject.transform.right = Vector3.right;
+                else if (movement.x < 0) spriteRenderer.gameObject.transform.right = -Vector3.right;
+
+                if (physics.IsGrounded) spriteRenderer.sprite = normal;
+                else spriteRenderer.sprite = air;
             }
         }
 
@@ -95,7 +109,9 @@ namespace Lander {
                         var boostDirection = Vector3.Lerp(minBoostDir, maxBoostDir, boostPowerRate).normalized;
 
                         arrowUI.gameObject.SetActive(true);
-                        arrowUI.right = boostDirection.normalized;                        
+                        arrowUI.right = boostDirection.normalized;
+
+                        animator.SetBool("isSqueeze", true);                        
                         break;
                     case InputData.EBoostState.RELEASED:
                         physics.AddAcceleration(EvaluateBoost());
@@ -105,6 +121,7 @@ namespace Lander {
                         boostState = InputData.EBoostState.NONE;
                         boostPowerRate = 0;
                         arrowUI.gameObject.SetActive(false);
+                        animator.SetBool("isSqueeze", false);
                         break;
                 }                
                 
@@ -194,7 +211,7 @@ namespace Lander {
                 physics.TargetFlightDirection = Vector3.Lerp(Vector3.up, -Vector3.right, flightDirectionControlValue).normalized;                
             } else if (movement.x > 0) {
                 physics.TargetFlightDirection = Vector3.Lerp(Vector3.up, Vector3.right, flightDirectionControlValue).normalized;                
-            }           
+            }                    
         }
 
 #if UNITY_EDITOR

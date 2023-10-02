@@ -86,7 +86,7 @@ public class PlatformGenerator : MonoBehaviour, IGameStateEntity {
         Vector3Int start = sortByMainAxis[0], end = sortByMainAxis[0];
         var st = tm.GetTile(start);
         var et = tm.GetTile(end);
-        var length = 0;
+        var length = 1;
         
         for(int i=1; i < sortByMainAxis.Length; i++) {
             var v = sortByMainAxis[i];

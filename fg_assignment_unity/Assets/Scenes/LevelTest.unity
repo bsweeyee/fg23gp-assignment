@@ -6336,7 +6336,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36b26283eed4b1144aadb37e2e346f99, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localPlatformSpawnPoint: {x: 0, y: 1.5, z: 0}
+  localPlatformSpawnPoint: {x: 0, y: 2, z: 0}
   axisDirection: 0
 --- !u!1 &1903550113
 GameObject:
@@ -6557,21 +6557,21 @@ MonoBehaviour:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
-      inSlope: 0.9140461
-      outSlope: 0.9140461
+      value: -0.0023498535
+      inSlope: 9.36422
+      outSlope: 9.36422
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.08256881
+      outWeight: 0.042813454
     - serializedVersion: 3
-      time: 1
+      time: 0.3
       value: 1
-      inSlope: 3.2226202
-      outSlope: 3.2226202
+      inSlope: -0
+      outSlope: -0
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.04024607
+      inWeight: 0.12660551
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
@@ -6609,12 +6609,12 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  controlAcceleration: {x: 5, y: 10, z: 0}
-  gravity: {x: 0, y: -0.5, z: 0}
-  externalAccelerationFalloff: 0.5
-  maximumVelocity: {x: 0, y: 1, z: 0}
-  minDragCoefficient: 30
-  maxDragCoefficient: 200
+  controlAcceleration: {x: 50, y: 150, z: 0}
+  gravity: {x: 0, y: -45, z: 0}
+  externalAccelerationFalloff: 0.385
+  maximumVelocity: {x: 0, y: 30, z: 0}
+  minDragCoefficient: 1
+  maxDragCoefficient: 1.5
   size: {x: 1.5, y: 1.5, z: 0}
   numOfCasts: 3
   raycastSkinWidth: 0.1
@@ -6633,21 +6633,20 @@ MonoBehaviour:
   physicsLayer:
     serializedVersion: 2
     m_Bits: 64
-  inputWaitFrames: 30
   normal: {fileID: 21300000, guid: a9b8b3280c7b9ed4a863dd1c9797bba6, type: 3}
   air: {fileID: 21300000, guid: a7e94003d5766934db3e0cddfbcccf29, type: 3}
   flightDirectionControlValue: 0.5
   boostMinimumDirection: 0.8
   boostMaximumDirection: 0
   boostAngleSpeed: 1
-  boostMoveSpeed: 30
+  boostMoveSpeed: 2000
   numOfBoosts: 1
   isAllowAirBoost: 0
-  maxEnergy: 3
-  energyBoostReductionRate: 1.5
-  energyFlightReductionRate: 3
-  energyRecoveryRate: 5
-  speedDeathThreshold: 0.2
+  maxEnergy: 50
+  energyBoostReductionRate: 25
+  energyFlightReductionRate: 70
+  energyRecoveryRate: 99
+  speedDeathThreshold: 17
   deathAnimationTime: 0.5
   deathTriggerWaitFrames: 30
 --- !u!4 &1946379114
@@ -6659,9 +6658,9 @@ Transform:
   m_GameObject: {fileID: 1946379110}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2, y: -9.5, z: 0}
+  m_LocalPosition: {x: -2, y: -9, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1903550114}
   - {fileID: 1921699989}

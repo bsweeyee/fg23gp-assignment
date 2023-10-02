@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Xml;
 using Unity.VisualScripting;
+using Unity.VisualScripting.Dependencies.NCalc;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
@@ -44,6 +46,8 @@ namespace Lander {
 
             private UnityEvent onFirstGrounded;
             private UnityEvent onFirstUnGrounded;
+            
+            private Vector3 currentRaycastSkinWidth;
 
             public Vector3 CurrentVelocity {
                 get {
@@ -109,6 +113,8 @@ namespace Lander {
 
                 onFirstGrounded = new UnityEvent();
                 onFirstUnGrounded = new UnityEvent();
+
+                currentRaycastSkinWidth = new Vector3(raycastSkinWidth, raycastSkinWidth, raycastSkinWidth);
             }
 
             public void LateInitialize(Game game) {
@@ -117,10 +123,9 @@ namespace Lander {
 
             public void OnFixedTick(Game game, float dt) {
                 currentVelocity = EvaluateAcceleration(dt);        
-                currentVelocity = EvaluateCollision();
-
-                transform.position += currentVelocity;
-                if (IsGrounded) currentVelocity = new Vector3(currentVelocity.x, 0, currentVelocity.z);
+                currentVelocity = EvaluateCollision(dt);
+                
+                transform.position += currentVelocity * dt;
             }
 
             public void OnTick(Game game, float dt) {
@@ -133,12 +138,12 @@ namespace Lander {
                 currentVelocity = Vector3.zero;                
             }
             
-            public void  Reset() {
-                currentVelocity = Vector3.zero;
+            public void Reset() {
+                currentVelocity = gravity;
                 externalAcceleration = Vector3.zero;
                 controlRate = 0;
                 dragCoefficientRate = 1;
-                inputDirection = Vector3.zero;                            
+                inputDirection = Vector3.zero;                                            
             }
 
             private Vector3 EvaluateInput(Vector3 input, float totalDt) {
@@ -161,7 +166,7 @@ namespace Lander {
                 drag = (drag.magnitude < 0.001f) ? Vector3.zero : drag;
 
                 dragCoefficientRate = Mathf.Clamp(dragCoefficientRate + dt, 0, 2.0f);
-
+                
                 return drag;
             }
 
@@ -179,88 +184,93 @@ namespace Lander {
                 // calculate acceleration
                 var cA = Vector3.Lerp( controlAcceleration * 0.1f , controlAcceleration, jolt.Evaluate(controlRate));
                 
-                var finalAcceleration = new Vector3(cA.x * input.x, cA.y * input.y, cA.z * input.z); 
+                var finalAcceleration = new Vector3(cA.x * input.x, cA.y * input.y, cA.z * input.z);                 
                 finalAcceleration -= drag;                
-                finalAcceleration += externalAcceleration;
-                externalAcceleration *= (1 - externalAccelerationFalloff); // we reduce external acceleration by factor 
-                
-                if(!IsGrounded && Mathf.Abs(vy) < maximumVelocity.y) {
-                    finalAcceleration += gravity;
-                }                
+                finalAcceleration += externalAcceleration;                
+                finalAcceleration += gravity;                
 
-                return new Vector3(vx, vy, vz) + (finalAcceleration * dt);
+                externalAcceleration *= (1 - externalAccelerationFalloff); // we reduce external acceleration by factor 
+
+                var finalVel = new Vector3(vx, vy, vz) + (finalAcceleration * dt);
+                if (finalVel.magnitude > maximumVelocity.magnitude) finalVel = currentVelocity;
+                return finalVel;
             }
 
-            private Vector3 EvaluateCollision() {
+            private Vector3 EvaluateCollision(float dt) {
                 var vx = currentVelocity.x;
                 var vy = currentVelocity.y;
                 var vz = currentVelocity.z;
 
+                var newVelocity = Vector3.zero;
+
                 if ( Mathf.Abs(vx) <= 0.01f) { vx = 0; } 
                                 
                 var heightDiff = size.y / (numOfCasts-1);    
-                var widthDiff = size.x / (numOfCasts-1);                            
+                var widthDiff = size.x / (numOfCasts-1);                                                           
 
                 // raycast in direction of current x velocity direction
-                var xSign = (vx == 0) ? 0 : Mathf.Sign(vx); 
-                RaycastHit2D hitX;
-                var isHit2DX = Cast2D(new Vector3(0, heightDiff, 0), new Vector3(xSign * size.x, -size.y, 0) , xSign * Vector3.right, out hitX);
-                if (isHit2DX) {
-                    vx = (hitX.distance - raycastSkinWidth) * xSign;
-                }                
-
+                var xSign = (Mathf.Abs(vx) <= float.Epsilon) ? 0 : Mathf.Sign(vx);
                 // raycast to check if anything in the y direction is hit and find the cast that is has the shortest distance 
-                var ySign = (Mathf.Abs(vy) <= 0.00025f && IsGrounded) ? 0 : Mathf.Sign(vy);                
-                RaycastHit2D hitY;
-                if (ySign == 0) {                    
-                    IsGrounded = true;
+                var ySign = (Mathf.Abs(vy) <= Mathf.Epsilon) ? -1 : Mathf.Sign(vy);                                                       
+                
+                RaycastHit2D hitY;               
+                var isHit2DY = Cast2D(transform.position + (newVelocity * dt),  new Vector3(widthDiff, 0, 0), new Vector3(-size.x, ySign * size.y, 0), ySign * Vector3.up, currentRaycastSkinWidth.y, out hitY);
+                RaycastHit2D hitX;
+                var isHit2DX = Cast2D(transform.position + (newVelocity * dt), new Vector3(0, heightDiff, 0), new Vector3(xSign * size.x, -size.y, 0) , xSign * Vector3.right, currentRaycastSkinWidth.x, out hitX);                
+                
+                // if (isHit2DY) Debug.Log("ground first: " + vy);
+                
+                if (isHit2DX) {
+                    currentRaycastSkinWidth.x = hitX.distance;
+                    transform.position += new Vector3(xSign * (currentRaycastSkinWidth.x + (xSign * hitX.normal.x * 0.1f)), 0, 0);                    
+                    vx = 0;
                 }
                 else {
-                    var isHit2DY = Cast2D(new Vector3(widthDiff, 0, 0), new Vector3(-size.x, ySign * size.y, 0), ySign * Vector3.up, out hitY);
-                    if (isHit2DY) {                    
-                        vy = (hitY.distance - raycastSkinWidth) * ySign;
-                        if (ySign < 0) { 
-                            vx = 0;                                                                                    
-                            IsGrounded = true;                         
-                        }
-                        else {
-                            vy = 0;                            
-                            IsGrounded = false;
-                        }                                         
-                    }
-                    else {                        
-                        IsGrounded = false;
-                    }
-                }
-
-                // check overlap                
-                var hitCollider = Physics2D.OverlapBox(transform.position, size, 0, ~layer);
-                if (hitCollider) {
-                    var separation = hitCollider.Distance(boxCollider2D);
-                    // Debug.Log($"separation: {separation.normal}, {separation.distance}");
-                    var s = -(Vector3)separation.normal * separation.distance;
-                    vx += s.x;
-                    vy += s.y;
-                    vz += s.z;
+                    currentRaycastSkinWidth.x = raycastSkinWidth;
                 }                
 
-                return new Vector3(vx, vy, vz);
+                
+                if (isHit2DY) {                    
+                    currentRaycastSkinWidth.y = hitY.distance;
+                    if (hitY.distance - (ySign * vy) < 0) {
+                        if (ySign < 0) {
+                            vx = 0;
+                            IsGrounded = true;
+                        }
+                        else if (ySign > 0) {
+                            var testHit = Physics2D.Raycast(transform.position, xSign * Vector3.right, size.x + currentRaycastSkinWidth.x, ~layer);                    
+                            if (testHit.collider == null) {
+                                vx = currentVelocity.x;
+                            }
+                        }
+                        vy = 0;
+                        transform.position += new Vector3(0, ySign * currentRaycastSkinWidth.y, 0);
+                    }                                                               
+                }
+                else {
+                    currentRaycastSkinWidth.y = raycastSkinWidth;                                                
+                    IsGrounded = false;                                               
+                }                                                 
+
+                newVelocity.x = vx;
+                newVelocity.y = vy;                               
+               
+                return newVelocity;
             }
 
-            private bool Cast2D(Vector3 interval, Vector3 size, Vector3 castDirection, out RaycastHit2D hit) {
+            private bool Cast2D(Vector3 position, Vector3 interval, Vector3 size, Vector3 castDirection, float castWidth, out RaycastHit2D hit) {
                 hit = new RaycastHit2D();
                 hit.distance = float.MaxValue;
                 bool isHit = false;
                 for(int i = 0; i < numOfCasts; i++) {
-                    var pos = transform.position + ((Vector3)size / 2) + interval * i;  
-                    var testHit = Physics2D.Raycast(pos, castDirection, raycastSkinWidth, ~layer);                    
+                    var pos = position + ((Vector3)size / 2) + interval * i;  
+                    var testHit = Physics2D.Raycast(pos, castDirection, castWidth, ~layer);                    
                     if (testHit.collider) {
                         if (testHit.collider != null && testHit.distance <= hit.distance) {
-                            // Debug.Log($"cast: {i}, {hit.distance}, {testHit.distance}");
                             hit = testHit;
                         }
                         isHit = true;                            
-                    }
+                    }                    
                 }
                 return isHit;                                
             }

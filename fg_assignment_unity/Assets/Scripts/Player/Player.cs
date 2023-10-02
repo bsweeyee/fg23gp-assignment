@@ -246,7 +246,7 @@ namespace Lander {
                         physics.AddAcceleration(EvaluateBoost());
                         controlRate = 0;                
                         boostPowerRate = 0;
-                        currentNumOfBoosts = Mathf.Clamp(0, int.MaxValue, currentNumOfBoosts - 1);
+                        currentNumOfBoosts = Mathf.Clamp(currentNumOfBoosts - 1, 0, int.MaxValue);
                         movement = Vector3.zero;
                         boostState = InputData.EBoostState.NONE;                        
                         

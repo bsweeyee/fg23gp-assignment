@@ -3,11 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 
-public interface ICheckpoint {
-    public Vector3 SpawnWorldPosition { get; } 
-}
-
-public abstract class Checkpoint : MonoBehaviour, ICheckpoint {    
+public abstract class Checkpoint : MonoBehaviour {    
     [SerializeField] protected Vector3 spawnLocalPosition;
     
     public static Vector3 CurrentSpawnWorldPosition {

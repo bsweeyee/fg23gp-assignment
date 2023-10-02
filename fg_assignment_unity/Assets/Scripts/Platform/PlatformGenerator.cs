@@ -5,27 +5,31 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
+using UnityEditor;
+using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
 [ExecuteInEditMode]
 public class PlatformGenerator : MonoBehaviour, IGameStateEntity {
-    struct TileBlockData {
+    [Serializable]
+    public struct TileBlockData {
         public Vector3 Centre;
         public Vector3 Size;
+        public Vector3 WorldSpawnPoint;
 
         public TileBlockData(Vector3 centre, Vector3 size) {
             this.Centre = centre;
             this.Size = size;
+            this.WorldSpawnPoint = centre;
         }
     }
 
-    enum EAxisDirection {
+    public enum EAxisDirection {
         X = 0,
         Y = 1
     }
 
-    [SerializeField] private Vector3 localPlatformSpawnPoint;
     [SerializeField] private EAxisDirection axisDirection; 
 
     private Grid grid;
@@ -33,12 +37,44 @@ public class PlatformGenerator : MonoBehaviour, IGameStateEntity {
     private TilemapRenderer tMapRenderer;
 
     private List<Vector3Int> occupiedTilePositions;
+    private List<Platform> platforms;
+    [HideInInspector][SerializeField] private List<TileBlockData> spawnPoints;
+
+    public Tilemap TileMap {
+        get {
+            return tMap;
+        }
+    }
+
+    public List<Vector3Int> OccupiedTilePositions {
+        get {
+            return occupiedTilePositions;
+        }
+    }
+
+    public EAxisDirection AxisDirection {
+        get {
+            return axisDirection;
+        }
+    }
+
+    public List<TileBlockData> SpawnPoints {
+        get {
+            return spawnPoints;
+        }
+        set {
+            spawnPoints = value;
+        }
+    }
+
     public void EarlyInitialize(Game game) {
         grid = GetComponentInChildren<Grid>();
         tMap = GetComponentInChildren<Tilemap>();
         tMapRenderer = GetComponentInChildren<TilemapRenderer>();
 
         occupiedTilePositions = new List<Vector3Int>();
+        platforms = new List<Platform>();
+
         foreach(var position in tMap.cellBounds.allPositionsWithin) {
             if(tMap.HasTile(position)) {
                 occupiedTilePositions.Add(position);
@@ -55,7 +91,12 @@ public class PlatformGenerator : MonoBehaviour, IGameStateEntity {
             var platform = go.AddComponent<Platform>(); 
 
             bx.size = block.Size;
-            platform.SetLocalSpawnPoint(localPlatformSpawnPoint);
+            
+            var spawn = spawnPoints.Find(x => x.Centre == block.Centre);            
+            platform.SetLocalSpawnPoint(platform.transform.InverseTransformPoint(spawn.WorldSpawnPoint));            
+            platform.TileBlockData = block;            
+
+            platforms.Add(platform);
         }
     }
 
@@ -75,7 +116,7 @@ public class PlatformGenerator : MonoBehaviour, IGameStateEntity {
 
     }
 
-    private List<TileBlockData> GetWorldSpaceBlockPositions(Tilemap tm, List<Vector3Int> tiles, EAxisDirection mainAxis = 0) {
+    public List<TileBlockData> GetWorldSpaceBlockPositions(Tilemap tm, List<Vector3Int> tiles, EAxisDirection mainAxis = 0) {
         List<TileBlockData> worldSpaceBlockCentre = new List<TileBlockData>();
         if (tiles.Count <= 0) return worldSpaceBlockCentre;
 
@@ -148,7 +189,7 @@ public class PlatformGenerator : MonoBehaviour, IGameStateEntity {
                 occupiedTilePositions.Add(tile.position);
             }
             else {
-                occupiedTilePositions.Remove(tile.position);
+                occupiedTilePositions.Remove(tile.position);                
             }
         }
     }
@@ -161,6 +202,7 @@ public class PlatformGenerator : MonoBehaviour, IGameStateEntity {
     private void OnDrawGizmos() {
         if (occupiedTilePositions == null) occupiedTilePositions = new List<Vector3Int>();
         if (tMapRenderer == null) tMapRenderer = GetComponentInChildren<TilemapRenderer>();
+        if (spawnPoints == null) spawnPoints = new List<TileBlockData>();
         if(tMap == null) {
             tMap = GetComponentInChildren<Tilemap>();
             foreach(var position in tMap.cellBounds.allPositionsWithin) {
@@ -183,17 +225,21 @@ public class PlatformGenerator : MonoBehaviour, IGameStateEntity {
             Gizmos.DrawCube(worldPos + size / 2, size);
         }
 
+
         var blocks = GetWorldSpaceBlockPositions(tMap, occupiedTilePositions, axisDirection);
-        foreach(var block in blocks) {
+                 
+        foreach(var block in blocks) {            
+            var newBlock = block;
             Gizmos.color = Color.black;
-            Gizmos.DrawSphere(block.Centre, 0.25f);
-        }
+            Gizmos.DrawSphere(block.Centre, 0.25f);            
+        }        
+
 
         Gizmos.color = Color.green;
         Gizmos.DrawWireCube(tMapRenderer.bounds.center, tMapRenderer.bounds.size);
 
         Gizmos.color = Color.red;
         Gizmos.DrawWireCube(tMapRenderer.bounds.center, tMapRenderer.chunkCullingBounds);
-    }
+    }    
 #endif
 }

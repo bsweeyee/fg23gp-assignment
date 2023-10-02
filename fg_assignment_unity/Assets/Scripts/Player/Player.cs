@@ -45,6 +45,7 @@ namespace Lander {
         private float controlRate;
         private Vector3 movement;
         
+        private bool wasReleased;
         private float boostPowerRate;
         private InputData.EBoostState boostState;
         private int targetBoostDirection;
@@ -120,7 +121,21 @@ namespace Lander {
 
                         var boostDirection = Vector3.Lerp(minBoostDir, maxBoostDir, boostPowerRate).normalized;
                         
+                        animator.SetBool("isSqueeze", true); 
+                        arrowUI.gameObject.SetActive(true);
                         arrowUI.right = boostDirection.normalized;                                                
+                        break;
+                    case InputData.EBoostState.RELEASED:                        
+                        physics.AddAcceleration(EvaluateBoost());
+                        controlRate = 0;                
+                        boostPowerRate = 0;
+                        wasReleased = true;                        
+                        movement = Vector3.zero;
+                        boostState = InputData.EBoostState.NONE;
+                        if (!physics.IsGrounded) currentNumOfBoosts = Mathf.Clamp(currentNumOfBoosts - 1, 0, int.MaxValue);                        
+                        
+                        arrowUI.gameObject.SetActive(false);
+                        animator.SetBool("isSqueeze", false);
                         break;                    
                 }                        
 
@@ -213,10 +228,15 @@ namespace Lander {
         private void OnFirstGrounded() {
             spriteRenderer.sprite = normal;                                                           
             currentNumOfBoosts = numOfBoosts;
+            Debug.Log("first grounded");
         }
 
         private void OnFirstUnGrounded() {
             spriteRenderer.sprite = air;
+            if (wasReleased) {
+                currentNumOfBoosts = Mathf.Clamp(currentNumOfBoosts - 1, 0, int.MaxValue);
+                wasReleased = false;
+            }
         }
     
         void IInput.Notify(InputData data) {
@@ -234,27 +254,7 @@ namespace Lander {
                 physics.TargetFlightDirection = Vector3.Lerp(Vector3.up, -Vector3.right, flightDirectionControlValue).normalized;                
             } else if (movement.x > 0) {
                 physics.TargetFlightDirection = Vector3.Lerp(Vector3.up, Vector3.right, flightDirectionControlValue).normalized;                
-            }
-
-            if (game.CurrentState == Game.PLAY_STATE) {
-                switch (boostState) {                   
-                    case InputData.EBoostState.PRESSED:
-                        arrowUI.gameObject.SetActive(true);
-                        animator.SetBool("isSqueeze", true);                        
-                        break;
-                    case InputData.EBoostState.RELEASED:                        
-                        physics.AddAcceleration(EvaluateBoost());
-                        controlRate = 0;                
-                        boostPowerRate = 0;
-                        currentNumOfBoosts = Mathf.Clamp(currentNumOfBoosts - 1, 0, int.MaxValue);
-                        movement = Vector3.zero;
-                        boostState = InputData.EBoostState.NONE;                        
-                        
-                        arrowUI.gameObject.SetActive(false);
-                        animator.SetBool("isSqueeze", false);
-                        break;
-                }
-            }                    
+            }                           
         }
 
 

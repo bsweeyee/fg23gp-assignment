@@ -235,7 +235,7 @@ namespace Lander {
                     if (hitY.distance - (ySign * vy) < 0) {
                         if (ySign < 0) {
                             vx = 0;
-                            IsGrounded = true;
+                            IsGrounded = true;                            
                         }
                         else if (ySign > 0) {
                             var testHit = Physics2D.Raycast(transform.position, xSign * Vector3.right, size.x + currentRaycastSkinWidth.x, ~layer);                    

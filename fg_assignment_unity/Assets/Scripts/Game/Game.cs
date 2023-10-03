@@ -19,7 +19,7 @@ namespace Lander {
 
         private InputController inputController;
         private IGameStateEntity[] entities;
-        private IPhysics[] physics;
+        private Physics.IPhysics[] physics;
         private IDebug[] debugs;
         private BaseGameState currentState;
 
@@ -52,13 +52,13 @@ namespace Lander {
             }
 
             Destroy(gameObject);
-        }       
+        }
 
         void EarlyInitialize() {
             inputController = FindObjectOfType<InputController>();
             inputController?.EarlyInitialize(this);
 
-            physics = FindObjectsOfType<MonoBehaviour>().OfType<IPhysics>().ToArray();
+            physics = FindObjectsOfType<MonoBehaviour>().OfType<Physics.IPhysics>().ToArray();
             foreach(var p in physics) {
                 p.EarlyInitialize(this);
             }

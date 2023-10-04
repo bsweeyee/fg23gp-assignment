@@ -16,9 +16,6 @@ namespace Lander {
         public class PhysicsController : MonoBehaviour, IPhysics, IDebug {
 
             [Header("Acceleration")]
-            [SerializeField] private AnimationCurve jolt;
-            [SerializeField] private AnimationCurve lift;
-            [SerializeField] private Vector3 controlAcceleration;
             [SerializeField] private Vector3 gravity;
             [SerializeField] private AnimationCurve externalAccelerationFalloffCurve;
             [SerializeField] private float fallOffSpeed = 1;
@@ -39,9 +36,7 @@ namespace Lander {
             private BoxCollider2D boxCollider2D;
             private Vector3 currentVelocity;
             private Vector3 externalAcceleration;
-            private Vector3 inputDirection;
-            private Vector3 targetFlightDirection;
-            private float controlRate;
+            private Vector3 input;
             private float dragCoefficientRate = 1;
             private float externalAccelerationFallOffRate;
             private bool isGrounded;
@@ -58,23 +53,11 @@ namespace Lander {
                 }
             }           
 
-            public Vector3 InputDirection {                
+            public Vector3 Input {                
                 set {
-                    inputDirection = value;
+                    input = value;
                 }
-            }
-
-            public Vector3 TargetFlightDirection {
-                set {
-                    targetFlightDirection = value;
-                }
-            }
-
-            public float ControlRate {
-                set {
-                    controlRate = value;
-                }
-            }
+            }            
 
             public bool IsGrounded {
                 get {
@@ -154,20 +137,8 @@ namespace Lander {
             public void Reset() {
                 currentVelocity = gravity;
                 externalAcceleration = Vector3.zero;
-                controlRate = 0;
                 dragCoefficientRate = 1;
-                inputDirection = Vector3.zero;                                            
-            }
-
-            private Vector3 EvaluateInput(Vector3 input, float totalDt) {
-                var output = Vector3.zero;
-                if (input.x < 0) {
-                    output = Vector3.Lerp(-Vector3.right, targetFlightDirection, lift.Evaluate(totalDt));
-                } else if (input.x > 0) {
-                    output = Vector3.Lerp(Vector3.right, targetFlightDirection, lift.Evaluate(totalDt));
-                }
-
-                return output;
+                input = Vector3.zero;                                            
             }
 
             private Vector3 EvaluateDrag(Vector3 velocity, float dt) {
@@ -186,17 +157,11 @@ namespace Lander {
             private Vector3 EvaluateAcceleration(float dt) {
                 var vx = currentVelocity.x;
                 var vy = currentVelocity.y;
-                var vz = currentVelocity.z;
-
-                // modify input controls
-                var input = EvaluateInput(inputDirection, controlRate);
-                
+                var vz = currentVelocity.z;                                
                 // calculate drag using formula 1/2*v^2*C
                 var drag = EvaluateDrag(currentVelocity, dt);
                 
                 // calculate acceleration
-                var cA = Vector3.Lerp( controlAcceleration * 0.1f , controlAcceleration, jolt.Evaluate(controlRate));
-
                 var finalExternalAcceleration = Vector3.zero;             
                 if (externalAcceleration.magnitude > 0) {
                     externalAccelerationFallOffRate += dt * fallOffSpeed;
@@ -209,7 +174,7 @@ namespace Lander {
                     externalAccelerationFallOffRate = 0;
                 }
 
-                var finalAcceleration = new Vector3(cA.x * input.x, cA.y * input.y, cA.z * input.z);                 
+                var finalAcceleration = input;                 
                 finalAcceleration -= drag;                
                 finalAcceleration += finalExternalAcceleration;                
                 finalAcceleration += gravity;                                            

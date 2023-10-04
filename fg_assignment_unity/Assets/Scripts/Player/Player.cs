@@ -22,6 +22,11 @@ namespace Lander {
         [SerializeField] private Sprite normal;
         [SerializeField] private Sprite air;
 
+        [Header("Controls")]
+        [SerializeField] private AnimationCurve jolt;
+        [SerializeField] private AnimationCurve lift;
+        [SerializeField] private Vector3 controlAcceleration;
+
         [Header("Flight")]
         [SerializeField][Range(0, 1)] private float flightDirectionControlValue;
 
@@ -54,6 +59,7 @@ namespace Lander {
         private float boostPowerRate;
         private InputData.EBoostState boostState;
         private int targetBoostDirection;
+        private Vector3 targetFlightDirection;
 
         private float currentEnergyLevel;
         private int currentNumOfBoosts;
@@ -173,13 +179,11 @@ namespace Lander {
 
         private void FixedTickAlive(Game game, float dt) {
             if (currentEnergyLevel <= 0) {
-                physics.InputDirection = Vector3.zero;
-                physics.ControlRate = 0;                
+                physics.Input = Vector3.zero;
             }
             else {
-                EvaluateControlRate(movement, dt);
-                physics.InputDirection = movement;
-                physics.ControlRate = controlRate;
+                controlRate = EvaluateControlRate(movement, dt);            
+                physics.Input = EvaluateInput(movement, controlRate);
             
                 if (movement.magnitude > 0) {
                     currentEnergyLevel = Mathf.Clamp(currentEnergyLevel - (dt * energyFlightReductionRate), 0, maxEnergy);
@@ -285,20 +289,23 @@ namespace Lander {
         private void EnterDead(Game game) {
             animator.SetBool("isDead", true);
             physics.Reset();
+            controlRate = 0;
         }
 
-        private void EvaluateControlRate(Vector3 movement, float dt) {
+        private float EvaluateControlRate(Vector3 movement, float dt) {
+            float output = 0;
             // add to control dt
             if (movement.x > 0) targetBoostDirection = 1;
             else if (movement.x < 0) targetBoostDirection = -1;
 
             if (movement.magnitude > 0) {
-                controlRate += dt;
-                controlRate = Mathf.Clamp01(controlRate);
+                output = controlRate + dt;
+                output = Mathf.Clamp01(output);
             }
             else {
-                controlRate = 0;
+                output = 0;
             }
+            return output;
         }
 
         private Vector3 EvaluateBoost() {
@@ -311,6 +318,19 @@ namespace Lander {
             var boostAcceleration = boostDirection * boostSpeed;
 
             return boostAcceleration;
+        }
+
+        private Vector3 EvaluateInput(Vector3 input, float totalDt) {
+            var final = Vector3.zero;
+            if (input.x < 0) {
+                final = Vector3.Lerp(-Vector3.right, targetFlightDirection, lift.Evaluate(totalDt));
+            } else if (input.x > 0) {
+                final = Vector3.Lerp(Vector3.right, targetFlightDirection, lift.Evaluate(totalDt));
+            }
+
+            var cA = Vector3.Lerp( controlAcceleration * 0.1f , controlAcceleration, jolt.Evaluate(controlRate));
+            
+            return new Vector3(cA.x * final.x, cA.y * final.y, cA.z * final.z);;
         }
 
         private void OnFirstGrounded() {
@@ -340,9 +360,9 @@ namespace Lander {
             }
 
             if (movement.x < 0) {
-                physics.TargetFlightDirection = Vector3.Lerp(Vector3.up, -Vector3.right, flightDirectionControlValue).normalized;
+                targetFlightDirection = Vector3.Lerp(Vector3.up, -Vector3.right, flightDirectionControlValue).normalized;    
             } else if (movement.x > 0) {
-                physics.TargetFlightDirection = Vector3.Lerp(Vector3.up, Vector3.right, flightDirectionControlValue).normalized;
+                targetFlightDirection = Vector3.Lerp(Vector3.up, Vector3.right, flightDirectionControlValue).normalized;
             }
         }
 

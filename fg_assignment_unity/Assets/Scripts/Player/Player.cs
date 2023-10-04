@@ -5,9 +5,16 @@ using Lander.Physics;
 using Lander.GameState;
 using System.Linq;
 using UnityEngine.UI;
+using UnityEngine.Video;
 
 namespace Lander {
-    public class Player : MonoBehaviour, IPlayStateEntity, IDeathStateEntity, IInput, IDebug {
+    public class Player : MonoBehaviour, IPlayStateEntity, IInput, IDebug {
+        public enum EPlayerState {
+            NONE,
+            ALIVE,
+            DEAD,
+        }        
+        
         [Header("Settings")]
         [SerializeField] private LayerMask physicsLayer;
 
@@ -57,6 +64,8 @@ namespace Lander {
         private Game game;
         private IPlayerObserver[] observers;
 
+        private EPlayerState currentPlayerState;
+
         private int CurrentNumOfBoosts {
             get {
                 return currentNumOfBoosts;
@@ -65,6 +74,37 @@ namespace Lander {
                 currentNumOfBoosts = Mathf.Clamp(value, 0, int.MaxValue);
                 foreach(var p in observers) {
                     p.OnBoostAmountChange(currentNumOfBoosts, 0, numOfBoosts);
+                }
+            }
+        }
+
+        private EPlayerState CurrentPlayerState {
+            get { return currentPlayerState; }
+            set {
+                var previous = currentPlayerState;
+                currentPlayerState = value;
+
+                switch (previous) {
+                    case EPlayerState.ALIVE:                    
+                    break;
+                    case EPlayerState.DEAD:
+                    ExitDead(game);
+                    break;
+                }
+
+                switch (currentPlayerState) {
+                    case EPlayerState.ALIVE:                    
+                    break;
+                    case EPlayerState.DEAD:
+                    EnterDead(game);
+                    break;
+                }
+
+                foreach(var s in observers) {
+                    s.OnExitState(previous, currentPlayerState);
+                }
+                foreach(var s in observers) {
+                    s.OnEnterState(previous, currentPlayerState);
                 }
             }
         }
@@ -86,7 +126,7 @@ namespace Lander {
             currentEnergyLevel = maxEnergy;
             currentNumOfBoosts = numOfBoosts;
 
-            observers = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<IPlayerObserver>().ToArray();
+            observers = GameObject.FindObjectsOfType<MonoBehaviour>(true).OfType<IPlayerObserver>().ToArray();
 
             this.game = game;
             IsEarlyInitialized = true;
@@ -98,6 +138,8 @@ namespace Lander {
             physics.Layer = physicsLayer;
             physics.OnFirstGrounded.AddListener( OnFirstGrounded );
             physics.OnFirstUnGrounded.AddListener( OnFirstUnGrounded );
+
+            CurrentPlayerState = EPlayerState.ALIVE;
 
             IsLateInitialized = true;
         }
@@ -127,6 +169,25 @@ namespace Lander {
         }
 
         void IPlayStateEntity.OnTick(Game game, float dt) {
+            switch(CurrentPlayerState)
+            {
+                case EPlayerState.ALIVE:
+                TickAlive(game, dt);
+                break;
+                case EPlayerState.DEAD:
+                TickDead(game, dt);
+                break;
+            }
+        }
+
+        void IPlayStateEntity.OnEnter(Game game, IBaseGameState previous) {
+           
+        }
+
+        void IPlayStateEntity.OnExit(Game game, IBaseGameState current) {
+        }
+
+        private void TickAlive(Game game, float dt) {
             switch (boostState) {
                 case InputData.EBoostState.PRESSED:
                     if (currentEnergyLevel <= 0) break;
@@ -168,7 +229,7 @@ namespace Lander {
             if (obstacleHit != null) {
                 if (deathFrameCooldown <= 0 && physics.CurrentVelocity.magnitude > speedDeathThreshold) {
                     // player animation, return to checkpoint
-                    game.CurrentState = Game.DEATH_STATE;
+                    CurrentPlayerState = EPlayerState.DEAD;
                     return;
                 }
             }
@@ -190,22 +251,21 @@ namespace Lander {
 
             foreach(var p in observers) {
                 p.OnEnergyChange(currentEnergyLevel, 0, maxEnergy);
-            }            
+            }
         }
 
-        void IPlayStateEntity.OnEnter(Game game, IBaseGameState previous) {
-           
+        private void TickDead(Game game, float dt) {
+            spriteRenderer.transform.rotation = Quaternion.AngleAxis(Mathf.Lerp(0, 270, deathTimePeriod / deathAnimationTime), transform.forward);
+
+            deathTimePeriod += dt;
+
+            if (deathTimePeriod > deathAnimationTime) {
+                Checkpoint.Respawn(transform);
+                CurrentPlayerState = EPlayerState.ALIVE;
+            }
         }
 
-        void IPlayStateEntity.OnExit(Game game, IBaseGameState current) {
-        }
-
-        void IDeathStateEntity.OnEnter(Game game, IBaseGameState previous) {
-            animator.SetBool("isDead", true);
-            physics.Reset();
-        }
-
-        void IDeathStateEntity.OnExit(Game game, IBaseGameState current) {
+        private void ExitDead(Game game) {
             spriteRenderer.transform.rotation = Quaternion.identity;
             targetBoostDirection = 1;
             deathFrameCooldown = deathTriggerWaitFrames;
@@ -215,18 +275,9 @@ namespace Lander {
             animator.SetBool("isDead", false);
         }
 
-        void IDeathStateEntity.OnTick(Game game, float dt) {
-            spriteRenderer.transform.rotation = Quaternion.AngleAxis(Mathf.Lerp(0, 270, deathTimePeriod / deathAnimationTime), transform.forward);
-
-            deathTimePeriod += dt;
-
-            if (deathTimePeriod > deathAnimationTime) {
-                Checkpoint.Respawn(transform);
-                game.CurrentState = Game.PLAY_STATE;
-            }
-        }
-
-        void IDeathStateEntity.OnFixedTick(Game game, float dt) {
+        private void EnterDead(Game game) {
+            animator.SetBool("isDead", true);
+            physics.Reset();
         }
 
         private void EvaluateControlRate(Vector3 movement, float dt) {
@@ -269,12 +320,14 @@ namespace Lander {
         }
 
         void IInput.Notify(InputData data) {
+            if (data.Paused || game.CurrentState == Game.PAUSE_STATE) return;
+            
             if (movement.x != data.Movement.x) controlRate = 0;
 
             if (boostState != InputData.EBoostState.PRESSED) movement = data.Movement;
 
             boostState = data.BoostState;
-            if (boostState == InputData.EBoostState.PRESSED) {
+            if (boostState == InputData.EBoostState.PRESSED || boostState == InputData.EBoostState.RELEASED) {
                 if (CurrentNumOfBoosts <= 0) { boostState = InputData.EBoostState.NONE; }
                 if (!isAllowAirBoost && !physics.IsGrounded) { boostState = InputData.EBoostState.NONE; }
             }

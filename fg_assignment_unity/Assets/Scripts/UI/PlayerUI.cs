@@ -6,7 +6,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PlayerUI : MonoBehaviour, IPlayStateEntity, IDeathStateEntity, IPlayerObserver
+public class PlayerUI : MonoBehaviour, IPlayStateEntity, IPlayerObserver
 {
     private Transform arrowUI;
     private Image energyUI;
@@ -46,10 +46,11 @@ public class PlayerUI : MonoBehaviour, IPlayStateEntity, IDeathStateEntity, IPla
     public void OnEnergyChange(float currentEnergy, float minEnergy, float maxEnergy) {
         energyUI.fillAmount = Mathf.InverseLerp(0, maxEnergy, currentEnergy);
     }
+    
     public void OnVelocityChange(Vector3 currentVelocity) {
     }
     
-    void IBaseEntity.EarlyInitialize(Game game) {
+    void IBaseGameEntity.EarlyInitialize(Game game) {
         if (IsEarlyInitialized) return;
 
         arrowUI = transform.Find("Arrow");
@@ -63,7 +64,7 @@ public class PlayerUI : MonoBehaviour, IPlayStateEntity, IDeathStateEntity, IPla
         IsEarlyInitialized = true;
     }
     
-    void IBaseEntity.LateInitialize(Game game) {
+    void IBaseGameEntity.LateInitialize(Game game) {
         if (IsLateInitialized) return;
 
         IsLateInitialized = true;
@@ -71,6 +72,7 @@ public class PlayerUI : MonoBehaviour, IPlayStateEntity, IDeathStateEntity, IPla
     
     void IPlayStateEntity.OnTick(Game game, float dt) {
     }
+    
     void IPlayStateEntity.OnFixedTick(Game game, float dt) {
     }
     
@@ -82,18 +84,20 @@ public class PlayerUI : MonoBehaviour, IPlayStateEntity, IDeathStateEntity, IPla
     void IPlayStateEntity.OnExit(Game game, IBaseGameState previous) {
     }
 
-    void IDeathStateEntity.OnEnter(Game game, IBaseGameState previous) {
-        arrowUI.gameObject.SetActive(false);
-        energyUI.gameObject.SetActive(false);
-        jumpIcon.transform.parent.gameObject.SetActive(false);
+    void IPlayerObserver.OnEnterState(Player.EPlayerState old, Player.EPlayerState current) {
+        switch (current) {
+            case Player.EPlayerState.ALIVE:
+            energyUI.gameObject.SetActive(true);
+            jumpIcon.transform.parent.gameObject.SetActive(true);
+            break;
+            case Player.EPlayerState.DEAD:
+            arrowUI.gameObject.SetActive(false);
+            energyUI.gameObject.SetActive(false);
+            jumpIcon.transform.parent.gameObject.SetActive(false);
+            break;
+        }                
     }
 
-    void IDeathStateEntity.OnExit(Game game, IBaseGameState previous) {
-    }    
-
-    void IDeathStateEntity.OnTick(Game game, float dt) {
-    }
-
-    void IDeathStateEntity.OnFixedTick(Game game, float dt) {
+    void IPlayerObserver.OnExitState(Player.EPlayerState old, Player.EPlayerState current) {
     }
 }

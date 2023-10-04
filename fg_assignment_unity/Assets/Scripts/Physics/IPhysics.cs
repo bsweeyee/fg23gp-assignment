@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Lander {
     namespace Physics {
-        public interface IPhysics : IBaseEntity, IBaseTickEntity {
+        public interface IPhysics : IBaseGameEntity, IBaseGameTickEntity {
             public Vector3 CurrentVelocity { get; }
         }
     }

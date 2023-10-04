@@ -20,8 +20,9 @@ namespace Lander {
             [SerializeField] private AnimationCurve lift;
             [SerializeField] private Vector3 controlAcceleration;
             [SerializeField] private Vector3 gravity;
-            [SerializeField][Range(0, 1)] private float externalAccelerationFalloff = 0.5f;
-            
+            [SerializeField] private AnimationCurve externalAccelerationFalloffCurve;
+            [SerializeField] private float fallOffSpeed = 1;
+
             [Header("Velocity")]
             [SerializeField] private Vector3 maximumVelocity;
             
@@ -42,6 +43,7 @@ namespace Lander {
             private Vector3 targetFlightDirection;
             private float controlRate;
             private float dragCoefficientRate = 1;
+            private float externalAccelerationFallOffRate;
             private bool isGrounded;
             private LayerMask layer;
 
@@ -194,13 +196,23 @@ namespace Lander {
                 
                 // calculate acceleration
                 var cA = Vector3.Lerp( controlAcceleration * 0.1f , controlAcceleration, jolt.Evaluate(controlRate));
-                
+
+                var finalExternalAcceleration = Vector3.zero;             
+                if (externalAcceleration.magnitude > 0) {
+                    externalAccelerationFallOffRate += dt * fallOffSpeed;
+                    var t = externalAccelerationFalloffCurve.Evaluate(externalAccelerationFallOffRate);
+                    finalExternalAcceleration = Vector3.Lerp(Vector3.zero, externalAcceleration, t);                                                            
+
+                }
+                if (finalExternalAcceleration.magnitude < 0.01f) {
+                    externalAcceleration = Vector3.zero;
+                    externalAccelerationFallOffRate = 0;
+                }
+
                 var finalAcceleration = new Vector3(cA.x * input.x, cA.y * input.y, cA.z * input.z);                 
                 finalAcceleration -= drag;                
-                finalAcceleration += externalAcceleration;                
-                finalAcceleration += gravity;                
-
-                externalAcceleration *= (1 - externalAccelerationFalloff); // we reduce external acceleration by factor 
+                finalAcceleration += finalExternalAcceleration;                
+                finalAcceleration += gravity;                                            
 
                 var finalVel = new Vector3(vx, vy, vz) + (finalAcceleration * dt);
                 if (finalVel.magnitude > maximumVelocity.magnitude) finalVel = currentVelocity;

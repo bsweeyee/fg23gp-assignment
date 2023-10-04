@@ -13,7 +13,6 @@ namespace Lander {
     {
         public static PlayState PLAY_STATE;
         public static StartState START_STATE;
-        public static DeathState DEATH_STATE;
         public static GameState.PauseState PAUSE_STATE;
 
         public static Game instance;
@@ -68,19 +67,17 @@ namespace Lander {
         }
 
         void EarlyInitialize() {
-            inputController = FindObjectOfType<InputController>();
-            physics = FindObjectsOfType<MonoBehaviour>().OfType<Physics.IPhysics>().ToArray();            
-            debugs = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<IDebug>().ToArray();
-            var baseEntities = FindObjectsOfType<MonoBehaviour>().OfType<IBaseEntity>().ToArray();
+            inputController = FindObjectOfType<InputController>(true);
+            physics = FindObjectsOfType<MonoBehaviour>(true).OfType<Physics.IPhysics>().ToArray();            
+            debugs = GameObject.FindObjectsOfType<MonoBehaviour>(true).OfType<IDebug>().ToArray();
+            var baseEntities = FindObjectsOfType<MonoBehaviour>(true).OfType<IBaseGameEntity>().ToArray();
 
             START_STATE = new StartState();
             PLAY_STATE = new PlayState();
-            DEATH_STATE = new DeathState();
             PAUSE_STATE = new GameState.PauseState();
 
             START_STATE.EarlyInitialize(this);
             PLAY_STATE.EarlyInitialize(this);
-            DEATH_STATE.EarlyInitialize(this);
             PAUSE_STATE.EarlyInitialize(this);
 
             // we have to run initialize here for all other entities that are not part of the state
@@ -92,10 +89,9 @@ namespace Lander {
         void LateInitialize() {
             START_STATE.LateInitialize(this);
             PLAY_STATE.LateInitialize(this);
-            DEATH_STATE.LateInitialize(this);
             PAUSE_STATE.LateInitialize(this);
             
-            var baseEntities = FindObjectsOfType<MonoBehaviour>().OfType<IBaseEntity>().ToArray();
+            var baseEntities = FindObjectsOfType<MonoBehaviour>(true).OfType<IBaseGameEntity>().ToArray();
             
             // we have to run initialize here for all other entities that are not part of the state
             foreach(var e in baseEntities) {

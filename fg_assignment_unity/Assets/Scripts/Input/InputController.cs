@@ -15,14 +15,15 @@ namespace Lander {
         }
 
         public Vector2 Movement;
-        public EBoostState BoostState;        
+        public EBoostState BoostState;
+        public bool Paused;        
     }
 
     public interface IInput {
         public void Notify(InputData data);
     }
 
-    public class InputController : MonoBehaviour, IBaseEntity
+    public class InputController : MonoBehaviour, IBaseGameEntity
     {
         private IInput[] inputs;
         private InputData cachedInput;
@@ -34,7 +35,7 @@ namespace Lander {
         public void EarlyInitialize(Game game) {
             if (IsEarlyInitialized) return;
 
-            inputs = FindObjectsOfType<MonoBehaviour>().OfType<IInput>().ToArray();
+            inputs = FindObjectsOfType<MonoBehaviour>(true).OfType<IInput>().ToArray();
             cachedInput = new InputData();
 
             cachedInput.Movement = Vector2.zero;
@@ -76,6 +77,19 @@ namespace Lander {
             }
             
             if (cachedInput.BoostState != InputData.EBoostState.PRESSED) cachedInput.BoostState = InputData.EBoostState.NONE;
+        }
+
+        public void OnPause(InputAction.CallbackContext context) {
+            switch (context.phase) {
+                case InputActionPhase.Performed:
+                if (context.ReadValueAsButton()) {
+                    cachedInput.Paused = !cachedInput.Paused;
+                    foreach(var input in inputs) {
+                        input.Notify(cachedInput);
+                    }
+                }
+                break;
+            }                    
         }
     }
 }

@@ -7,7 +7,7 @@ using System.Linq;
 using UnityEngine.UI;
 
 namespace Lander {
-    public class Player : MonoBehaviour, IGameStateEntity, IInput, IDebug {
+    public class Player : MonoBehaviour, IPlayStateEntity, IDeathStateEntity, IInput, IDebug {
         [Header("Settings")]
         [SerializeField] private LayerMask physicsLayer;
 
@@ -69,7 +69,13 @@ namespace Lander {
             }
         }
 
+        public bool IsEarlyInitialized { get; private set; }
+
+        public bool IsLateInitialized { get; private set; }
+
         public void EarlyInitialize(Game game) {
+            if (IsEarlyInitialized) return;
+
             physics = GetComponent<PhysicsController>();
             animator = GetComponentInChildren<Animator>();
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();
@@ -83,137 +89,144 @@ namespace Lander {
             observers = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<IPlayerObserver>().ToArray();
 
             this.game = game;
+            IsEarlyInitialized = true;
         }
 
         public void LateInitialize(Game game) {
+            if (IsLateInitialized) return;
+
             physics.Layer = physicsLayer;
             physics.OnFirstGrounded.AddListener( OnFirstGrounded );
             physics.OnFirstUnGrounded.AddListener( OnFirstUnGrounded );
+
+            IsLateInitialized = true;
         }
 
-        public void OnFixedTick(Game game, float dt) {
-            if (game.CurrentState == Game.PLAY_STATE) {
-                if (currentEnergyLevel <= 0) {
-                    physics.InputDirection = Vector3.zero;
-                    physics.ControlRate = 0;
+        void IPlayStateEntity.OnFixedTick(Game game, float dt) {
+            if (currentEnergyLevel <= 0) {
+                physics.InputDirection = Vector3.zero;
+                physics.ControlRate = 0;
+                return;
+            }
+
+            EvaluateControlRate(movement, dt);
+
+            physics.InputDirection = movement;
+            physics.ControlRate = controlRate;
+
+            if (movement.magnitude > 0) {
+                currentEnergyLevel = Mathf.Clamp(currentEnergyLevel - (dt * energyFlightReductionRate), 0, maxEnergy);
+            }
+
+            if (movement.x > 0) spriteRenderer.gameObject.transform.right = Vector3.right;
+            else if (movement.x < 0) spriteRenderer.gameObject.transform.right = -Vector3.right;
+
+            foreach(var p in observers) {
+                p.OnVelocityChange(physics.CurrentVelocity);
+            }   
+        }
+
+        void IPlayStateEntity.OnTick(Game game, float dt) {
+            switch (boostState) {
+                case InputData.EBoostState.PRESSED:
+                    if (currentEnergyLevel <= 0) break;
+
+                    boostPowerRate = Mathf.Clamp01(boostPowerRate + (dt * boostAngleSpeed));
+                    currentEnergyLevel = (boostPowerRate < 1) ? Mathf.Clamp(currentEnergyLevel - (dt * energyBoostReductionRate), 0, maxEnergy) : currentEnergyLevel;
+
+                    var minBoostDir = Vector3.Lerp(Vector3.up, targetBoostDirection * Vector3.right, boostMinimumDirection);
+                    var maxBoostDir = Vector3.Lerp(Vector3.up, targetBoostDirection * Vector3.right, boostMaximumDirection);
+
+                    var boostDirection = Vector3.Lerp(minBoostDir, maxBoostDir, boostPowerRate).normalized;
+
+                    animator.SetBool("isSqueeze", true);
+                    foreach(var p in observers) {
+                        p.OnBoostDirectionChange(boostDirection);
+                    }
+                    break;
+                case InputData.EBoostState.RELEASED:
+                    physics.AddAcceleration(EvaluateBoost());
+                    controlRate = 0;
+                    boostPowerRate = 0;
+                    wasReleased = true;
+                    movement = Vector3.zero;
+                    boostState = InputData.EBoostState.NONE;
+                    if(!physics.IsGrounded) {
+                        CurrentNumOfBoosts -= 1;
+                    }
+
+                    foreach(var p in observers) {
+                        p.OnBoostDirectionChange(Vector3.zero);
+                    }
+                    animator.SetBool("isSqueeze", false);
+                    break;
+            }
+
+            var obstacleHit = Physics2D.OverlapBox(transform.position, physics.SizeWithCast + Vector3.one * 0.1f, 0, ~physicsLayer);
+
+            // death check
+            if (obstacleHit != null) {
+                if (deathFrameCooldown <= 0 && physics.CurrentVelocity.magnitude > speedDeathThreshold) {
+                    // player animation, return to checkpoint
+                    game.CurrentState = Game.DEATH_STATE;
                     return;
                 }
-
-                EvaluateControlRate(movement, dt);
-
-                physics.InputDirection = movement;
-                physics.ControlRate = controlRate;
-
-                if (movement.magnitude > 0) {
-                    currentEnergyLevel = Mathf.Clamp(currentEnergyLevel - (dt * energyFlightReductionRate), 0, maxEnergy);
-                }
-
-                if (movement.x > 0) spriteRenderer.gameObject.transform.right = Vector3.right;
-                else if (movement.x < 0) spriteRenderer.gameObject.transform.right = -Vector3.right;
-
-                foreach(var p in observers) {
-                    p.OnVelocityChange(physics.CurrentVelocity);
-                }
             }
-        }
 
-        public void OnTick(Game game, float dt) {
-            if (game.CurrentState == Game.PLAY_STATE) {
-                switch (boostState) {
-                    case InputData.EBoostState.PRESSED:
-                        if (currentEnergyLevel <= 0) break;
+            deathFrameCooldown = Mathf.Clamp(deathFrameCooldown - 1, 0, deathTriggerWaitFrames);
 
-                        boostPowerRate = Mathf.Clamp01(boostPowerRate + (dt * boostAngleSpeed));
-                        currentEnergyLevel = (boostPowerRate < 1) ? Mathf.Clamp(currentEnergyLevel - (dt * energyBoostReductionRate), 0, maxEnergy) : currentEnergyLevel;
-
-                        var minBoostDir = Vector3.Lerp(Vector3.up, targetBoostDirection * Vector3.right, boostMinimumDirection);
-                        var maxBoostDir = Vector3.Lerp(Vector3.up, targetBoostDirection * Vector3.right, boostMaximumDirection);
-
-                        var boostDirection = Vector3.Lerp(minBoostDir, maxBoostDir, boostPowerRate).normalized;
-
-                        animator.SetBool("isSqueeze", true);
-                        foreach(var p in observers) {
-                            p.OnBoostDirectionChange(boostDirection);
-                        }
-                        break;
-                    case InputData.EBoostState.RELEASED:
-                        physics.AddAcceleration(EvaluateBoost());
-                        controlRate = 0;
-                        boostPowerRate = 0;
-                        wasReleased = true;
-                        movement = Vector3.zero;
-                        boostState = InputData.EBoostState.NONE;
-                        if(!physics.IsGrounded) {
-                            CurrentNumOfBoosts -= 1;
-                        }
-
-                        foreach(var p in observers) {
-                            p.OnBoostDirectionChange(Vector3.zero);
-                        }
-                        animator.SetBool("isSqueeze", false);
-                        break;
-                }
-
-                var obstacleHit = Physics2D.OverlapBox(transform.position, physics.SizeWithCast + Vector3.one * 0.1f, 0, ~physicsLayer);
-
-                // death check
+            // grounded check
+            if (physics.IsGrounded) {
                 if (obstacleHit != null) {
-                    if (deathFrameCooldown <= 0 && physics.CurrentVelocity.magnitude > speedDeathThreshold) {
-                        // player animation, return to checkpoint
-                        game.CurrentState = Game.DEATH_STATE;
-                        return;
+                    if (boostState != InputData.EBoostState.PRESSED) {
+                        currentEnergyLevel = Mathf.Clamp(currentEnergyLevel + (dt * energyRecoveryRate), 0, maxEnergy);
                     }
-                }
-
-                deathFrameCooldown = Mathf.Clamp(deathFrameCooldown - 1, 0, deathTriggerWaitFrames);
-
-                // grounded check
-                if (physics.IsGrounded) {
-                    if (obstacleHit != null) {
-                        if (boostState != InputData.EBoostState.PRESSED) {
-                            currentEnergyLevel = Mathf.Clamp(currentEnergyLevel + (dt * energyRecoveryRate), 0, maxEnergy);
-                        }
-                        var chk = obstacleHit.GetComponent<Checkpoint>();
-                        if (chk != null) {
-                            Checkpoint.CurrentSpawnWorldPosition = chk.SpawnWorldPosition;
-                        }
+                    var chk = obstacleHit.GetComponent<Checkpoint>();
+                    if (chk != null) {
+                        Checkpoint.CurrentSpawnWorldPosition = chk.SpawnWorldPosition;
                     }
-                }
-
-                foreach(var p in observers) {
-                    p.OnEnergyChange(currentEnergyLevel, 0, maxEnergy);
                 }
             }
-            else if(game.CurrentState == Game.DEATH_STATE) {
 
-                spriteRenderer.transform.rotation = Quaternion.AngleAxis(Mathf.Lerp(0, 270, deathTimePeriod / deathAnimationTime), transform.forward);
+            foreach(var p in observers) {
+                p.OnEnergyChange(currentEnergyLevel, 0, maxEnergy);
+            }            
+        }
 
-                deathTimePeriod += dt;
+        void IPlayStateEntity.OnEnter(Game game, IBaseGameState previous) {
+           
+        }
 
-                if (deathTimePeriod > deathAnimationTime) {
-                    Checkpoint.Respawn(transform);
-                    game.CurrentState = Game.PLAY_STATE;
-                }
+        void IPlayStateEntity.OnExit(Game game, IBaseGameState current) {
+        }
+
+        void IDeathStateEntity.OnEnter(Game game, IBaseGameState previous) {
+            animator.SetBool("isDead", true);
+            physics.Reset();
+        }
+
+        void IDeathStateEntity.OnExit(Game game, IBaseGameState current) {
+            spriteRenderer.transform.rotation = Quaternion.identity;
+            targetBoostDirection = 1;
+            deathFrameCooldown = deathTriggerWaitFrames;
+            CurrentNumOfBoosts = numOfBoosts;
+            currentEnergyLevel = maxEnergy;
+            deathTimePeriod = 0;
+            animator.SetBool("isDead", false);
+        }
+
+        void IDeathStateEntity.OnTick(Game game, float dt) {
+            spriteRenderer.transform.rotation = Quaternion.AngleAxis(Mathf.Lerp(0, 270, deathTimePeriod / deathAnimationTime), transform.forward);
+
+            deathTimePeriod += dt;
+
+            if (deathTimePeriod > deathAnimationTime) {
+                Checkpoint.Respawn(transform);
+                game.CurrentState = Game.PLAY_STATE;
             }
         }
 
-        public void OnEnter(Game game, IBaseGameState previous, IBaseGameState current) {
-            if (current.GetType() == typeof(DeathState)) {
-                animator.SetBool("isDead", true);
-                physics.Reset();
-            }
-        }
-
-        public void OnExit(Game game, IBaseGameState previous, IBaseGameState current) {
-            if (previous.GetType() == typeof(DeathState)) {
-                spriteRenderer.transform.rotation = Quaternion.identity;
-                targetBoostDirection = 1;
-                deathFrameCooldown = deathTriggerWaitFrames;
-                CurrentNumOfBoosts = numOfBoosts;
-                currentEnergyLevel = maxEnergy;
-                deathTimePeriod = 0;
-                animator.SetBool("isDead", false);
-            }
+        void IDeathStateEntity.OnFixedTick(Game game, float dt) {
         }
 
         private void EvaluateControlRate(Vector3 movement, float dt) {
@@ -302,8 +315,7 @@ namespace Lander {
             string energy = $"energy level: {currentEnergyLevel}";
 
             GUILayout.Label(energy);
-        }
-
+        }       
 #endif
     }
 }

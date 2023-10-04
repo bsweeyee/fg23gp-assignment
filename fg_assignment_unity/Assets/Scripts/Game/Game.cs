@@ -5,6 +5,8 @@ using UnityEngine;
 using System.Linq;
 using UnityEditor;
 using Lander.GameState;
+using System;
+using Unity.VisualScripting;
 
 namespace Lander {
     public class Game : MonoBehaviour, IDebug
@@ -12,13 +14,15 @@ namespace Lander {
         public static PlayState PLAY_STATE;
         public static StartState START_STATE;
         public static DeathState DEATH_STATE;
+        public static GameState.PauseState PAUSE_STATE;
 
         public static Game instance;
 
-        [SerializeField][Range(0, 1)] private float timeFactor = 1;
+        [SerializeField][Range(0, 1)] private float physicsTickFactor = 1;
+        [SerializeField][Range(0, 1)] private float currentStateTickFactor = 1;
+
 
         private InputController inputController;
-        private IGameStateEntity[] entities;
         private Physics.IPhysics[] physics;
         private IDebug[] debugs;
         private BaseGameState currentState;
@@ -29,15 +33,24 @@ namespace Lander {
                 var previousState = currentState;
                 currentState = value;
 
+                if (previousState != null) {
+                    previousState.OnExit(this, currentState);
+                }
+
                 if (currentState != null) {
-                    currentState.OnEnter(this, previousState, currentState);
-                    currentState.OnExit(this, previousState, currentState);
+                    currentState.OnEnter(this, previousState);
                 }
             }
         }
 
-        public IGameStateEntity[] Entities {
-            get { return entities; }
+        public float PhysicsTickFactor {
+            get { return physicsTickFactor; }
+            set { physicsTickFactor = value; }
+        }
+
+        public float CurrentStateTickFactor {
+            get { return currentStateTickFactor; }
+            set { currentStateTickFactor = value; }
         }
 
         public void Initialize() {
@@ -56,48 +69,55 @@ namespace Lander {
 
         void EarlyInitialize() {
             inputController = FindObjectOfType<InputController>();
-            inputController?.EarlyInitialize(this);
-
-            physics = FindObjectsOfType<MonoBehaviour>().OfType<Physics.IPhysics>().ToArray();
-            foreach(var p in physics) {
-                p.EarlyInitialize(this);
-            }
-
-            entities = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<IGameStateEntity>().ToArray();
+            physics = FindObjectsOfType<MonoBehaviour>().OfType<Physics.IPhysics>().ToArray();            
+            debugs = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<IDebug>().ToArray();
+            var baseEntities = FindObjectsOfType<MonoBehaviour>().OfType<IBaseEntity>().ToArray();
 
             START_STATE = new StartState();
             PLAY_STATE = new PlayState();
             DEATH_STATE = new DeathState();
+            PAUSE_STATE = new GameState.PauseState();
 
-            currentState = PLAY_STATE;
-            currentState.EarlyInitialize(this);
+            START_STATE.EarlyInitialize(this);
+            PLAY_STATE.EarlyInitialize(this);
+            DEATH_STATE.EarlyInitialize(this);
+            PAUSE_STATE.EarlyInitialize(this);
 
-            debugs = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<IDebug>().ToArray();
+            // we have to run initialize here for all other entities that are not part of the state
+            foreach(var e in baseEntities) {
+                e.EarlyInitialize(this);
+            }
         }
 
         void LateInitialize() {
-            inputController?.LateInitialize(this);
-            foreach(var p in physics) {
-                p.LateInitialize(this);
-            }
-            currentState.LateInitialize(this);
+            START_STATE.LateInitialize(this);
+            PLAY_STATE.LateInitialize(this);
+            DEATH_STATE.LateInitialize(this);
+            PAUSE_STATE.LateInitialize(this);
+            
+            var baseEntities = FindObjectsOfType<MonoBehaviour>().OfType<IBaseEntity>().ToArray();
+            
+            // we have to run initialize here for all other entities that are not part of the state
+            foreach(var e in baseEntities) {
+                e.LateInitialize(this);
+            }  
         }
 
         void Update() {
-            var dt = Time.deltaTime;
-            currentState.OnTick(this, dt);
+            var dt = Time.deltaTime * currentStateTickFactor;
+            currentState.OnTick(this, dt * currentStateTickFactor);
 
             foreach(var p in physics) {
-                p.OnTick(this, dt);
+                p.OnTick(this, dt * physicsTickFactor);
             }
         }
 
         void FixedUpdate()  {
-            var dt = Time.fixedDeltaTime * timeFactor;
-            currentState.OnFixedTick(this, dt);
+            var dt = Time.fixedDeltaTime;
+            currentState.OnFixedTick(this, dt * currentStateTickFactor);
 
             foreach(var p in physics) {
-                p.OnFixedTick(this, dt);
+                p.OnFixedTick(this, dt * physicsTickFactor);
             }
         }
 

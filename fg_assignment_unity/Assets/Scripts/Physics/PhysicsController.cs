@@ -1,3 +1,4 @@
+using Lander.GameState;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
@@ -107,7 +108,13 @@ namespace Lander {
                 get { return onFirstUnGrounded; }
             }
 
+            public bool IsEarlyInitialized { get; private set; }
+
+            public bool IsLateInitialized { get; private set; }
+
             public void EarlyInitialize(Game game) {
+                if (IsEarlyInitialized) return;
+
                 boxCollider2D = GetComponent<BoxCollider2D>();
                 boxCollider2D.size = size;
 
@@ -115,11 +122,15 @@ namespace Lander {
                 onFirstUnGrounded = new UnityEvent();
 
                 currentRaycastSkinWidth = new Vector3(raycastSkinWidth, raycastSkinWidth, raycastSkinWidth);
+
+                IsEarlyInitialized = true;
             }
 
             public void LateInitialize(Game game) {
-                
-            }
+                if (IsLateInitialized) return;
+
+                IsLateInitialized = true;                
+            }           
 
             public void OnFixedTick(Game game, float dt) {
                 currentVelocity = EvaluateAcceleration(dt);        
@@ -302,7 +313,7 @@ namespace Lander {
                 string vel = $"current velocity: {currentVelocity}, {currentVelocity.magnitude}";
                 
                 GUILayout.Label(vel);
-            }
+            }            
 #endif
         }
     }

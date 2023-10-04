@@ -6,7 +6,7 @@ using System.Security;
 using UnityEngine;
 
 namespace Lander {
-    public class CameraController : MonoBehaviour, IGameStateEntity {
+    public class CameraController : MonoBehaviour, IPlayStateEntity {
         [SerializeField] private float cameraSpeed = 0.5f;
         [SerializeField] private float maxCameraTargetDistance = 5;
         private Transform followTarget;
@@ -17,17 +17,23 @@ namespace Lander {
             }
         }
 
-         public void EarlyInitialize(Game game) {
-            var players = game.Entities.Where( x=> x.GetType() == typeof(Player) ).ToArray();            
-            if (players.Length > 0 ) {
-                followTarget = (players[0] as Player).transform;
-            }
+        public bool IsEarlyInitialized { get; private set; }
+
+        public bool IsLateInitialized { get; private set; }
+        
+        public void EarlyInitialize(Game game) {
+            if (IsEarlyInitialized) return;            
+
+            IsEarlyInitialized = true;
         }
 
-        public void LateInitialize(Game game) {        
+        public void LateInitialize(Game game) { 
+            if (IsLateInitialized) return;       
+        
+            IsLateInitialized = true;
         }
 
-        public void OnFixedTick(Game game, float dt) {
+        void IPlayStateEntity.OnFixedTick(Game game, float dt) {
             if (game.CurrentState == Game.PLAY_STATE) {
                 if (followTarget != null) {
                     var plane = new Plane(transform.forward, transform.position);
@@ -46,13 +52,17 @@ namespace Lander {
             }
         }
 
-        public void OnTick(Game game, float dt) {
+        void IPlayStateEntity.OnTick(Game game, float dt) {
         }        
 
-        public void OnEnter(Game game, IBaseGameState previous, IBaseGameState current) {
+        void IPlayStateEntity.OnEnter(Game game, IBaseGameState previous) {
+            var players = game.CurrentState.Entities.Where( x=> x.GetType() == typeof(Player) ).ToArray();            
+            if (players != null && players.Length > 0 ) {
+                followTarget = (players[0] as Player).transform;
+            }
         }
 
-        public void OnExit(Game game, IBaseGameState previous, IBaseGameState current) {
+        void IPlayStateEntity.OnExit(Game game, IBaseGameState previous) {
         }        
     }
 }

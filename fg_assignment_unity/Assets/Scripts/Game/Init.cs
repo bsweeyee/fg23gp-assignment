@@ -10,5 +10,6 @@ public class Init : MonoBehaviour
         var gamePrefab = Resources.Load<Game>("Game");
         var game = Instantiate(gamePrefab);
         game.Initialize();
+        game.CurrentState = Game.PLAY_STATE;
     }
 }

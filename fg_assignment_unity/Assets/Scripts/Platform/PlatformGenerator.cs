@@ -13,7 +13,7 @@ using UnityEngine.Tilemaps;
 namespace Lander {
 
     [ExecuteInEditMode]
-    public class PlatformGenerator : MonoBehaviour, IGameStateEntity {
+    public class PlatformGenerator : MonoBehaviour, IPlayStateEntity {
         [Serializable]
         public struct TileBlockData {
             public Vector3 Centre;
@@ -69,7 +69,13 @@ namespace Lander {
             }
         }
 
+        public bool IsEarlyInitialized { get; private set; }
+
+        public bool IsLateInitialized { get; private set; }
+
         public void EarlyInitialize(Game game) {
+            if (IsEarlyInitialized) return;
+
             grid = GetComponentInChildren<Grid>();
             tMap = GetComponentInChildren<Tilemap>();
             tMapRenderer = GetComponentInChildren<TilemapRenderer>();
@@ -100,15 +106,20 @@ namespace Lander {
 
                 platforms.Add(platform);
             }
+
+            IsEarlyInitialized = true;
         }
 
         public void LateInitialize(Game game) {
+            if (IsLateInitialized) return;
+
+            IsLateInitialized = true;
         }
 
-        public void OnEnter(Game game, IBaseGameState previous, IBaseGameState current) {
+        public void OnEnter(Game game, IBaseGameState previous) {
 
         }
-        public void OnExit(Game game, IBaseGameState previous, IBaseGameState current) {
+        public void OnExit(Game game, IBaseGameState current) {
 
         }
         public void OnTick(Game game, float dt) {

@@ -38,9 +38,11 @@ namespace Lander {
                 Handles.color = Color.red;
                 if (Handles.Button(newPos + Vector3.down.normalized * 1, Quaternion.identity, 0.5f, 0.5f, Handles.SphereHandleCap)) {
                     if (Application.isPlaying) {
-                        var player = Game.instance.Entities.First(x => (x as Player) != null) as Player;
-                        Checkpoint.CurrentSpawnWorldPosition = newPos;
-                        Checkpoint.Respawn(player.transform);
+                        var player = Game.instance.CurrentState.Entities.First(x => (x as Player) != null) as Player;
+                        if (player != null) {
+                            Checkpoint.CurrentSpawnWorldPosition = newPos;
+                            Checkpoint.Respawn(player.transform);
+                        }
                     }
                 }
             }

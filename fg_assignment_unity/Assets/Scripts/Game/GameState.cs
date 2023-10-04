@@ -10,61 +10,170 @@ namespace Lander {
         public interface IBaseGameState {
             public void EarlyInitialize(Game game);
             public void LateInitialize(Game game);
-            public void OnEnter(Game game, IBaseGameState previous, IBaseGameState current);
-            public void OnExit(Game game, IBaseGameState previous, IBaseGameState current);
+            public void OnEnter(Game game, IBaseGameState previous);
+            public void OnExit(Game game, IBaseGameState current);
             public void OnTick(Game game, float dt);
             public void OnFixedTick(Game game, float dt);
         }
         
         public abstract class BaseGameState : IBaseGameState {            
             private Game game;
+            protected IBaseEntity[] entities;
+            public IBaseEntity[] Entities {
+                get { return entities; }
+            }
 
-            public virtual void EarlyInitialize(Game game) {                
-                foreach(var entity in game.Entities) {                    
+            public virtual void EarlyInitialize(Game game) { 
+                foreach(var entity in entities) {                    
                     entity.EarlyInitialize(game);
                 }
                 this.game = game;                
             }
 
             public virtual void LateInitialize(Game game) {
-                foreach(var entity in game.Entities) {                    
+                foreach(var entity in entities) {                    
                     entity.LateInitialize(game);
                 }
                 this.game = game;
             }
 
-            public virtual void OnEnter(Game game, IBaseGameState previous, IBaseGameState current) {
-                foreach(var obs in game.Entities) {
-                    obs.OnEnter(game, previous, current);
-                }
-            }            
-            public virtual void OnExit(Game game, IBaseGameState previous, IBaseGameState current) {
-                foreach(var obs in game.Entities) {
-                    obs.OnExit(game, previous, current);
-                }
-            }            
-            public virtual void OnTick(Game game, float dt) {
-                foreach(var obs in game.Entities) {
-                    obs.OnTick(game, dt);
-                }
+            public virtual void OnEnter(Game game, IBaseGameState previous) {
             }
+
+            public virtual void OnExit(Game game, IBaseGameState current) {
+            }
+
+            public virtual void OnTick(Game game, float dt) {
+            }
+
             public virtual void OnFixedTick(Game game, float dt) {
-                foreach(var obs in game.Entities) {
-                    obs.OnFixedTick(game, dt);
-                }
-            }            
+            }
         }
 
         public class StartState : BaseGameState {
-            
+            public override void EarlyInitialize(Game game) {
+                entities = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<IStartStateEntity>().ToArray();
+                base.EarlyInitialize(game);
+            }
+
+            public override void OnEnter(Game game, IBaseGameState previous) {
+                foreach(var obs in entities) {
+                    var o = obs as IStartStateEntity;
+                    o.OnEnter(game, previous);
+                }
+            }            
+            public override void OnExit(Game game, IBaseGameState current) {
+                foreach(var obs in entities) {
+                    var o = obs as IStartStateEntity;
+                    o.OnExit(game, current);
+                }
+            }            
+            public override void OnTick(Game game, float dt) {
+                foreach(var obs in entities) {
+                    var o = obs as IStartStateEntity;
+                    o.OnTick(game, dt);
+                }
+            }
+            public override void OnFixedTick(Game game, float dt) {
+                foreach(var obs in entities) {
+                    var o = obs as IStartStateEntity;
+                    o.OnFixedTick(game, dt);
+                }
+            }  
         }
 
         public class PlayState : BaseGameState {
-            
+            public override void EarlyInitialize(Game game) {
+                entities = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<IPlayStateEntity>().ToArray();
+                base.EarlyInitialize(game);
+            }
+            public override void OnEnter(Game game, IBaseGameState previous) {
+                foreach(var obs in entities) {
+                    var o = obs as IPlayStateEntity;
+                    o.OnEnter(game, previous);
+                }
+            }            
+            public override void OnExit(Game game, IBaseGameState current) {
+                foreach(var obs in entities) {
+                    var o = obs as IPlayStateEntity;
+                    o.OnExit(game, current);
+                }
+            }            
+            public override void OnTick(Game game, float dt) {
+                foreach(var obs in entities) {
+                    var o = obs as IPlayStateEntity;
+                    o.OnTick(game, dt);
+                }
+            }
+            public override void OnFixedTick(Game game, float dt) {
+                foreach(var obs in entities) {
+                    var o = obs as IPlayStateEntity;
+                    o.OnFixedTick(game, dt);
+                }
+            }  
         }
 
         public class DeathState : BaseGameState {
-           
+            public override void EarlyInitialize(Game game) {
+                entities = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<IDeathStateEntity>().ToArray();
+                base.EarlyInitialize(game);
+            }
+            public override void OnEnter(Game game, IBaseGameState previous) {
+                foreach(var obs in entities) {
+                    var o = obs as IDeathStateEntity;
+                    o.OnEnter(game, previous);
+                }
+            }            
+            public override void OnExit(Game game, IBaseGameState current) {
+                foreach(var obs in entities) {
+                    var o = obs as IDeathStateEntity;
+                    o.OnExit(game, current);
+                }
+            }            
+            public override void OnTick(Game game, float dt) {
+                foreach(var obs in entities) {
+                    var o = obs as IDeathStateEntity;
+                    o.OnTick(game, dt);
+                }
+            }
+            public override void OnFixedTick(Game game, float dt) {
+                foreach(var obs in entities) {
+                    var o = obs as IDeathStateEntity;
+                    o.OnFixedTick(game, dt);
+                }
+            }
+        }
+
+        public class PauseState : BaseGameState {
+            public override void EarlyInitialize(Game game) {
+                entities = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<IPauseStateEntity>().ToArray();
+                base.EarlyInitialize(game);
+            }
+
+            public override void OnEnter(Game game, IBaseGameState previous) {
+                foreach(var obs in entities) {
+                    var o = obs as IPauseStateEntity;
+                    o.OnEnter(game, previous);
+                }
+            }            
+            public override void OnExit(Game game, IBaseGameState current) {
+                foreach(var obs in entities) {
+                    var o = obs as IPauseStateEntity;
+                    o.OnExit(game, current);
+                }
+            }            
+            public override void OnTick(Game game, float dt) {
+                foreach(var obs in entities) {
+                    var o = obs as IPauseStateEntity;
+                    o.OnTick(game, dt);
+                }
+            }
+            public override void OnFixedTick(Game game, float dt) {
+                foreach(var obs in entities) {
+                    var o = obs as IPauseStateEntity;
+                    o.OnFixedTick(game, dt);
+                }
+            }
         }
     }
 }

@@ -27,22 +27,27 @@ namespace Lander {
         private IInput[] inputs;
         private InputData cachedInput;
 
+        public bool IsEarlyInitialized { get; private set; }
+
+        public bool IsLateInitialized { get; private set; }
+
         public void EarlyInitialize(Game game) {
+            if (IsEarlyInitialized) return;
+
             inputs = FindObjectsOfType<MonoBehaviour>().OfType<IInput>().ToArray();
             cachedInput = new InputData();
 
             cachedInput.Movement = Vector2.zero;
             cachedInput.BoostState = InputData.EBoostState.NONE;
+
+            IsEarlyInitialized = true;
         }
 
         public void LateInitialize(Game game) {
-        }
-
-        public void OnTick(Game game, float dt) {
-        }
-
-        public void OnFixedTick(Game game, float dt) {
-        }
+            if (IsLateInitialized) return;
+    
+            IsLateInitialized = true;
+        }      
 
         public void OnFly(InputAction.CallbackContext context) {                        
             var movement = context.ReadValue<Vector2>();

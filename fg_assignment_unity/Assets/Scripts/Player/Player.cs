@@ -145,27 +145,11 @@ namespace Lander {
         }
 
         void IPlayStateEntity.OnFixedTick(Game game, float dt) {
-            if (currentEnergyLevel <= 0) {
-                physics.InputDirection = Vector3.zero;
-                physics.ControlRate = 0;
-                return;
-            }
-
-            EvaluateControlRate(movement, dt);
-
-            physics.InputDirection = movement;
-            physics.ControlRate = controlRate;
-
-            if (movement.magnitude > 0) {
-                currentEnergyLevel = Mathf.Clamp(currentEnergyLevel - (dt * energyFlightReductionRate), 0, maxEnergy);
-            }
-
-            if (movement.x > 0) spriteRenderer.gameObject.transform.right = Vector3.right;
-            else if (movement.x < 0) spriteRenderer.gameObject.transform.right = -Vector3.right;
-
-            foreach(var p in observers) {
-                p.OnVelocityChange(physics.CurrentVelocity);
-            }   
+            switch(CurrentPlayerState) {
+                case EPlayerState.ALIVE:
+                FixedTickAlive(game, dt);
+                break;
+            }               
         }
 
         void IPlayStateEntity.OnTick(Game game, float dt) {
@@ -185,6 +169,29 @@ namespace Lander {
         }
 
         void IPlayStateEntity.OnExit(Game game, IBaseGameState current) {
+        }
+
+        private void FixedTickAlive(Game game, float dt) {
+            if (currentEnergyLevel <= 0) {
+                physics.InputDirection = Vector3.zero;
+                physics.ControlRate = 0;                
+            }
+            else {
+                EvaluateControlRate(movement, dt);
+                physics.InputDirection = movement;
+                physics.ControlRate = controlRate;
+            
+                if (movement.magnitude > 0) {
+                    currentEnergyLevel = Mathf.Clamp(currentEnergyLevel - (dt * energyFlightReductionRate), 0, maxEnergy);
+                }
+                
+                if (movement.x > 0) spriteRenderer.gameObject.transform.right = Vector3.right;
+                else if (movement.x < 0) spriteRenderer.gameObject.transform.right = -Vector3.right;
+            }
+
+            foreach(var p in observers) {
+                p.OnVelocityChange(physics.CurrentVelocity, speedDeathThreshold);
+            }
         }
 
         private void TickAlive(Game game, float dt) {

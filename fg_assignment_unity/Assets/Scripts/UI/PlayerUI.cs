@@ -8,8 +8,16 @@ using UnityEngine.UI;
 
 public class PlayerUI : MonoBehaviour, IPlayStateEntity, IPlayerObserver
 {
+    [SerializeField][Range(0, 1)] private float speedWarningOnThreshold = 0.9f; 
+    [SerializeField][Range(0, 1)] private float speedWarningOffThreshold = 0.5f; 
+
     private Transform arrowUI;
-    private Image energyUI;
+    private Transform energyUI;
+    private Transform highSpeedUI;
+    
+    private Image energyBar;
+    private Image warningBar;
+
     private List<GameObject> jumpArrayUI;
     private GameObject jumpIcon;
 
@@ -28,6 +36,7 @@ public class PlayerUI : MonoBehaviour, IPlayStateEntity, IPlayerObserver
     }
     
     public void OnBoostAmountChange(int currentBoostAmount, int minBoostAmount, int maxBoostAmount) {
+        if (jumpIcon == null) return;
         while (jumpArrayUI.Count < maxBoostAmount) {
             var jumpIconInstance = Instantiate(jumpIcon.gameObject, jumpIcon.transform.parent);            
             jumpIconInstance.gameObject.SetActive(true);
@@ -44,10 +53,17 @@ public class PlayerUI : MonoBehaviour, IPlayStateEntity, IPlayerObserver
     }
     
     public void OnEnergyChange(float currentEnergy, float minEnergy, float maxEnergy) {
-        energyUI.fillAmount = Mathf.InverseLerp(0, maxEnergy, currentEnergy);
+        energyBar.fillAmount = Mathf.InverseLerp(0, maxEnergy, currentEnergy);
     }
     
-    public void OnVelocityChange(Vector3 currentVelocity) {
+    public void OnVelocityChange(Vector3 currentVelocity, float velocityDeathThreshold) {
+        if (currentVelocity.magnitude > (velocityDeathThreshold * speedWarningOnThreshold)) {
+            highSpeedUI.gameObject.SetActive(true);
+        } else if (currentVelocity.magnitude <= (velocityDeathThreshold * speedWarningOffThreshold)) {
+            highSpeedUI.gameObject.SetActive(false);
+        }
+
+        warningBar.fillAmount = Mathf.InverseLerp(0, velocityDeathThreshold, currentVelocity.magnitude);
     }
     
     void IBaseGameEntity.EarlyInitialize(Game game) {
@@ -56,10 +72,17 @@ public class PlayerUI : MonoBehaviour, IPlayStateEntity, IPlayerObserver
         arrowUI = transform.Find("Arrow");
         arrowUI.gameObject.SetActive(false);
 
-        energyUI = transform.Find("Energy/Bar").GetComponent<Image>();
+        highSpeedUI = transform.Find("SpeedWarning");
+        warningBar = highSpeedUI.Find("Bar").GetComponent<Image>();
+        highSpeedUI.gameObject.SetActive(false);
+
+        energyUI = transform.Find("Energy");
+        energyBar = energyUI.Find("Bar").GetComponent<Image>();
+
         jumpArrayUI = new List<GameObject>();
         jumpIcon = transform.Find("Jump/Array/Icon").gameObject;
-        jumpIcon.SetActive(false);
+        if (!jumpIcon.activeInHierarchy) jumpIcon = null;
+        jumpIcon?.SetActive(false);
 
         IsEarlyInitialized = true;
     }
@@ -78,7 +101,7 @@ public class PlayerUI : MonoBehaviour, IPlayStateEntity, IPlayerObserver
     
     void IPlayStateEntity.OnEnter(Game game, IBaseGameState previous) {
         energyUI.gameObject.SetActive(true);
-        jumpIcon.transform.parent.gameObject.SetActive(true);
+        jumpIcon?.transform.parent.gameObject.SetActive(true);
     }
 
     void IPlayStateEntity.OnExit(Game game, IBaseGameState previous) {
@@ -88,12 +111,13 @@ public class PlayerUI : MonoBehaviour, IPlayStateEntity, IPlayerObserver
         switch (current) {
             case Player.EPlayerState.ALIVE:
             energyUI.gameObject.SetActive(true);
-            jumpIcon.transform.parent.gameObject.SetActive(true);
+            jumpIcon?.transform.parent.gameObject.SetActive(true);
             break;
             case Player.EPlayerState.DEAD:
             arrowUI.gameObject.SetActive(false);
             energyUI.gameObject.SetActive(false);
-            jumpIcon.transform.parent.gameObject.SetActive(false);
+            highSpeedUI.gameObject.SetActive(false);
+            jumpIcon?.transform.parent.gameObject.SetActive(false);
             break;
         }                
     }

@@ -8,7 +8,7 @@ namespace  Lander {
         public void OnBoostDirectionChange(Vector3 boostDirection);
         public void OnBoostAmountChange(int currentBoostAmount, int minBoostAmount, int maxBoostAmount);
         public void OnEnergyChange(float currentEnergy, float minEnergy, float maxEnergy);
-        public void OnVelocityChange(Vector3 currentVelocity);
+        public void OnVelocityChange(Vector3 currentVelocity, float velocityDeathThreshold);
     
         public void OnEnterState(Player.EPlayerState old, Player.EPlayerState current);        
         public void OnExitState(Player.EPlayerState old, Player.EPlayerState current);        

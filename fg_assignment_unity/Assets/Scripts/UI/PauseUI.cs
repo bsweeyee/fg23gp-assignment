@@ -14,6 +14,7 @@ public class PauseUI : MonoBehaviour, IPauseStateEntity, IInput {
     public void EarlyInitialize(Game game) {
         if (IsEarlyInitialized) return;
         this.game = game;
+        gameObject.SetActive(false);
 
         IsEarlyInitialized = true;
     }

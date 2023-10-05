@@ -25,6 +25,7 @@ namespace Lander {
         private Physics.IPhysics[] physics;
         private IDebug[] debugs;
         private BaseGameState currentState;
+        private GameSettings gameSettings;
 
         public BaseGameState CurrentState {
             get { return currentState; }
@@ -50,6 +51,12 @@ namespace Lander {
         public float CurrentStateTickFactor {
             get { return currentStateTickFactor; }
             set { currentStateTickFactor = value; }
+        }
+
+        public GameSettings GameSettings {
+            get {
+                return gameSettings;
+            }
         }
 
         public void Initialize() {

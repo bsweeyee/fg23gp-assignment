@@ -22,6 +22,8 @@ namespace Lander {
 
 
         private InputController inputController;
+        private LevelController levelController;
+        private Player player;
         private Physics.IPhysics[] physics;
         private IDebug[] debugs;
         private BaseGameState currentState;
@@ -59,10 +61,12 @@ namespace Lander {
             }
         }
 
-        public void Initialize() {
+        public void Initialize(GameSettings settings) {
             if (instance == null) {
                 instance = this;
                 DontDestroyOnLoad(gameObject);
+
+                gameSettings = settings;
 
                 EarlyInitialize();
                 LateInitialize();
@@ -75,9 +79,16 @@ namespace Lander {
 
         void EarlyInitialize() {
             inputController = FindObjectOfType<InputController>(true);
-            physics = FindObjectsOfType<MonoBehaviour>(true).OfType<Physics.IPhysics>().ToArray();            
+            levelController = FindObjectOfType<LevelController>(true);
+            player = FindObjectOfType<Player>(true);
+
+            physics = FindObjectsOfType<MonoBehaviour>(true).OfType<Physics.IPhysics>().ToArray();
             debugs = GameObject.FindObjectsOfType<MonoBehaviour>(true).OfType<IDebug>().ToArray();
             var baseEntities = FindObjectsOfType<MonoBehaviour>(true).OfType<IBaseGameEntity>().ToArray();
+
+            inputController?.EarlyInitialize(this);
+            levelController?.EarlyInitialize(this);
+            player?.EarlyInitialize(this);
 
             START_STATE = new StartState();
             PLAY_STATE = new PlayState();
@@ -97,13 +108,13 @@ namespace Lander {
             START_STATE.LateInitialize(this);
             PLAY_STATE.LateInitialize(this);
             PAUSE_STATE.LateInitialize(this);
-            
+
             var baseEntities = FindObjectsOfType<MonoBehaviour>(true).OfType<IBaseGameEntity>().ToArray();
-            
+
             // we have to run initialize here for all other entities that are not part of the state
             foreach(var e in baseEntities) {
                 e.LateInitialize(this);
-            }  
+            }
         }
 
         void Update() {

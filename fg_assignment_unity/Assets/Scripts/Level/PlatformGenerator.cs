@@ -8,6 +8,7 @@ using Unity.VisualScripting;
 using UnityEditor;
 using UnityEditor.Rendering;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.Tilemaps;
 
 namespace Lander {
@@ -16,14 +17,14 @@ namespace Lander {
     public class PlatformGenerator : MonoBehaviour, IPlayStateEntity {
         [Serializable]
         public struct TileBlockData {
-            public Vector3 Centre;
+            public Vector3 LocalSpaceCentre;
             public Vector3 Size;
-            public Vector3 WorldSpawnPoint;
+            [FormerlySerializedAs("WorldSpawnPoint")] public Vector3 LocalSpawnPoint;
 
-            public TileBlockData(Vector3 centre, Vector3 size) {
-                this.Centre = centre;
+            public TileBlockData(Vector3 localSpaceCentre, Vector3 size) {
+                this.LocalSpaceCentre = localSpaceCentre;
                 this.Size = size;
-                this.WorldSpawnPoint = centre;
+                this.LocalSpawnPoint = localSpaceCentre;
             }
         }
 
@@ -40,7 +41,7 @@ namespace Lander {
 
         private List<Vector3Int> occupiedTilePositions;
         private List<Platform> platforms;
-        [HideInInspector][SerializeField] private List<TileBlockData> spawnPoints;
+        [SerializeField] private List<TileBlockData> localSpaceBlocks;
 
         public Tilemap TileMap {
             get {
@@ -60,13 +61,17 @@ namespace Lander {
             }
         }
 
-        public List<TileBlockData> SpawnPoints {
+        public List<TileBlockData> LocalSpaceBlocks {
             get {
-                return spawnPoints;
+                return localSpaceBlocks;
             }
             set {
-                spawnPoints = value;
+                localSpaceBlocks = value;
             }
+        }
+
+        public List<Platform> Platforms {
+            get { return platforms; }
         }
 
         public bool IsEarlyInitialized { get; private set; }
@@ -89,20 +94,17 @@ namespace Lander {
                 }
             }
 
-            var wsBlocks = GetWorldSpaceBlockPositions(tMap, occupiedTilePositions, axisDirection);
-            foreach(var block in wsBlocks) {
+            // var wsBlocks = GetWorldSpaceBlockPositions(tMap, occupiedTilePositions, axisDirection);
+            foreach(var block in localSpaceBlocks) {
                 var go = new GameObject("Platform");
                 go.transform.parent = tMap.transform;
-                go.transform.position = block.Centre;
+                go.transform.localPosition = block.LocalSpaceCentre;
 
                 var bx = go.AddComponent<BoxCollider2D>();
                 var platform = go.AddComponent<Platform>();
 
-                bx.size = block.Size;
-
-                var spawn = spawnPoints.Find(x => x.Centre == block.Centre);
-                platform.SetLocalSpawnPoint(platform.transform.InverseTransformPoint(spawn.WorldSpawnPoint));
                 platform.TileBlockData = block;
+                bx.size = block.Size;
 
                 platforms.Add(platform);
             }
@@ -119,6 +121,7 @@ namespace Lander {
         public void OnEnter(Game game, IBaseGameState previous) {
 
         }
+
         public void OnExit(Game game, IBaseGameState current) {
 
         }
@@ -129,9 +132,9 @@ namespace Lander {
 
         }
 
-        public List<TileBlockData> GetWorldSpaceBlockPositions(Tilemap tm, List<Vector3Int> tiles, EAxisDirection mainAxis = 0) {
-            List<TileBlockData> worldSpaceBlockCentre = new List<TileBlockData>();
-            if (tiles.Count <= 0) return worldSpaceBlockCentre;
+        public List<TileBlockData> GetLocalSpaceBlockPositions(Tilemap tm, List<Vector3Int> tiles, EAxisDirection mainAxis = 0) {
+            List<TileBlockData> localSpaceBlockCentre = new List<TileBlockData>();
+            if (tiles.Count <= 0) return localSpaceBlockCentre;
 
             var sortByMainAxis = (mainAxis == 0) ? tiles.OrderBy(x => x.x).OrderBy(x => x.y).ToArray() : tiles.OrderBy(x => x.y).OrderBy(x => x.x).ToArray();
             int prevMainAxis = (mainAxis == 0) ? sortByMainAxis[0].y : sortByMainAxis[0].x;
@@ -154,11 +157,18 @@ namespace Lander {
                     if (st == null || et == null) { continue; }
 
                     if (GetCenter(tm, st as Tile, et as Tile, start, end, out center)) {
+                        center = tm.transform.InverseTransformPoint(center);
                         var size = ((et as Tile).sprite.bounds.size + (st as Tile).sprite.bounds.size) / 2;
                         if (mainAxis == 0) size.x *= length;
                         else size.y *= length;
                         TileBlockData data = new TileBlockData(center, size);
-                        worldSpaceBlockCentre.Add( data );
+                        if(localSpaceBlocks != null && localSpaceBlocks.Count > 0) {
+                            var p = localSpaceBlocks.Find(x => x.LocalSpaceCentre == center);
+                            if(p.LocalSpaceCentre == center) {
+                                data.LocalSpawnPoint = p.LocalSpawnPoint;
+                            }
+                        }
+                        localSpaceBlockCentre.Add( data );
                     }
                     start = v;
                     length = 0;
@@ -176,17 +186,26 @@ namespace Lander {
             st = tm.GetTile(start);
             et = tm.GetTile(end);
 
-            if (st == null || et == null) { return worldSpaceBlockCentre; }
+            if (st == null || et == null) { return localSpaceBlockCentre; }
 
             if (GetCenter(tm, st as Tile, et as Tile, start, end, out center)) {
+                center = tm.transform.InverseTransformPoint(center);
                 var size = ((et as Tile).sprite.bounds.size + (st as Tile).sprite.bounds.size) / 2;
                 if (mainAxis == 0) size.x *= length;
                 else size.y *= length;
                 TileBlockData data = new TileBlockData(center, size);
-                worldSpaceBlockCentre.Add( data );
+
+                if(localSpaceBlocks != null && localSpaceBlocks.Count > 0) {
+                    var p = localSpaceBlocks.Find(x => x.LocalSpaceCentre == center);
+                    if(p.LocalSpaceCentre == center) {
+                        data.LocalSpawnPoint = p.LocalSpawnPoint;
+                    }
+                }
+
+                localSpaceBlockCentre.Add( data );
             }
 
-            return worldSpaceBlockCentre;
+            return localSpaceBlockCentre;
         }
 
         private bool GetCenter(Tilemap tm, Tile startTile, Tile endTile, Vector3Int start, Vector3Int end, out Vector3 centre) {
@@ -215,7 +234,7 @@ namespace Lander {
         private void OnDrawGizmos() {
             if (occupiedTilePositions == null) occupiedTilePositions = new List<Vector3Int>();
             if (tMapRenderer == null) tMapRenderer = GetComponentInChildren<TilemapRenderer>();
-            if (spawnPoints == null) spawnPoints = new List<TileBlockData>();
+            if (localSpaceBlocks == null) localSpaceBlocks = new List<TileBlockData>();
             if(tMap == null) {
                 tMap = GetComponentInChildren<Tilemap>();
                 foreach(var position in tMap.cellBounds.allPositionsWithin) {
@@ -238,13 +257,20 @@ namespace Lander {
                 Gizmos.DrawCube(worldPos + size / 2, size);
             }
 
+            if(!Application.isPlaying) {
+                localSpaceBlocks = GetLocalSpaceBlockPositions(tMap, occupiedTilePositions, axisDirection);
+                localSpaceBlocks = localSpaceBlocks.OrderBy(x => x.LocalSpaceCentre.y).ToList();
 
-            var blocks = GetWorldSpaceBlockPositions(tMap, occupiedTilePositions, axisDirection);
-
-            foreach(var block in blocks) {
-                var newBlock = block;
-                Gizmos.color = Color.black;
-                Gizmos.DrawSphere(block.Centre, 0.25f);
+                foreach(var block in localSpaceBlocks) {
+                    Gizmos.color = Color.black;
+                    Gizmos.DrawSphere(tMap.transform.TransformPoint(block.LocalSpaceCentre), 0.25f);
+                }
+            }
+            else {
+                foreach(var platform in platforms) {
+                    Gizmos.color = Color.black;
+                    Gizmos.DrawSphere(platform.transform.position, 0.25f);
+                }
             }
 
 

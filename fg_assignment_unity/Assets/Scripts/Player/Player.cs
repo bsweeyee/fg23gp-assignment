@@ -13,8 +13,8 @@ namespace Lander {
             NONE,
             ALIVE,
             DEAD,
-        }        
-        
+        }
+
         [Header("Settings")]
         [SerializeField] private LayerMask physicsLayer;
 
@@ -91,7 +91,7 @@ namespace Lander {
                 currentPlayerState = value;
 
                 switch (previous) {
-                    case EPlayerState.ALIVE:                    
+                    case EPlayerState.ALIVE:
                     break;
                     case EPlayerState.DEAD:
                     ExitDead(game);
@@ -99,7 +99,7 @@ namespace Lander {
                 }
 
                 switch (currentPlayerState) {
-                    case EPlayerState.ALIVE:                    
+                    case EPlayerState.ALIVE:
                     break;
                     case EPlayerState.DEAD:
                     EnterDead(game);
@@ -141,6 +141,8 @@ namespace Lander {
         public void LateInitialize(Game game) {
             if (IsLateInitialized) return;
 
+            Checkpoint.Respawn(transform);
+
             physics.Layer = physicsLayer;
             physics.OnFirstGrounded.AddListener( OnFirstGrounded );
             physics.OnFirstUnGrounded.AddListener( OnFirstUnGrounded );
@@ -155,7 +157,7 @@ namespace Lander {
                 case EPlayerState.ALIVE:
                 FixedTickAlive(game, dt);
                 break;
-            }               
+            }
         }
 
         void IPlayStateEntity.OnTick(Game game, float dt) {
@@ -171,7 +173,7 @@ namespace Lander {
         }
 
         void IPlayStateEntity.OnEnter(Game game, IBaseGameState previous) {
-           
+
         }
 
         void IPlayStateEntity.OnExit(Game game, IBaseGameState current) {
@@ -182,13 +184,13 @@ namespace Lander {
                 physics.Input = Vector3.zero;
             }
             else {
-                controlRate = EvaluateControlRate(movement, dt);            
+                controlRate = EvaluateControlRate(movement, dt);
                 physics.Input = EvaluateInput(movement, controlRate);
-            
+
                 if (movement.magnitude > 0) {
                     currentEnergyLevel = Mathf.Clamp(currentEnergyLevel - (dt * energyFlightReductionRate), 0, maxEnergy);
                 }
-                
+
                 if (movement.x > 0) spriteRenderer.gameObject.transform.right = Vector3.right;
                 else if (movement.x < 0) spriteRenderer.gameObject.transform.right = -Vector3.right;
             }
@@ -329,7 +331,7 @@ namespace Lander {
             }
 
             var cA = Vector3.Lerp( controlAcceleration * 0.1f , controlAcceleration, jolt.Evaluate(controlRate));
-            
+
             return new Vector3(cA.x * final.x, cA.y * final.y, cA.z * final.z);;
         }
 
@@ -348,7 +350,7 @@ namespace Lander {
 
         void IInput.Notify(InputData data) {
             if (data.Paused || game.CurrentState == Game.PAUSE_STATE) return;
-            
+
             if (movement.x != data.Movement.x) controlRate = 0;
 
             if (boostState != InputData.EBoostState.PRESSED) movement = data.Movement;
@@ -360,7 +362,7 @@ namespace Lander {
             }
 
             if (movement.x < 0) {
-                targetFlightDirection = Vector3.Lerp(Vector3.up, -Vector3.right, flightDirectionControlValue).normalized;    
+                targetFlightDirection = Vector3.Lerp(Vector3.up, -Vector3.right, flightDirectionControlValue).normalized;
             } else if (movement.x > 0) {
                 targetFlightDirection = Vector3.Lerp(Vector3.up, Vector3.right, flightDirectionControlValue).normalized;
             }
@@ -395,7 +397,7 @@ namespace Lander {
             string energy = $"energy level: {currentEnergyLevel}";
 
             GUILayout.Label(energy);
-        }       
+        }
 #endif
     }
 }

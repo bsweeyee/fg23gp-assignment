@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca20e35d87119c540885b94917055779, type: 3}
+  m_Name: GameSettings
+  m_EditorClassIdentifier: 
+  GamePrefab: {fileID: 7299579562213864245, guid: 6279783cf9aaaa148a376df8634d729b, type: 3}
+  CameraPrefab: {fileID: 3491709621627698892, guid: 61093c3471103d04bad0636ae867b0c6, type: 3}
+  PlayerPrefab: {fileID: 7918175204807317319, guid: bbae3bf03adc84e49b4b584405bd2f05, type: 3}
+  InputPrefab: {fileID: 6198561742874730930, guid: ee1c23cd2dc31ad469bfa2bbfd497ee7, type: 3}
+  LevelPrefab: {fileID: 2364766103049040997, guid: c5dfa87552d746b43aaf1741dbefed8d, type: 3}
+  PauseUIPrefab: {fileID: 6260224782049977248, guid: 197b911f0dc59bf47a91a0578d961588, type: 3}
+  LevelData:
+  - LevelID: 0
+    LevelLength: 24
+    StartBlock: {fileID: 551154707699771696, guid: c77bd69c1ae45ec4da901203c29a340f, type: 3}
+    EndBlock: {fileID: 2601669877344681721, guid: 633e1267ffbe0dc49a57345cb95c537c, type: 3}
+    LevelBlocks:
+    - {fileID: 8775904217813142000, guid: e4d4cccc49e5f9e4aa6e833b4b6498be, type: 3}
+    - {fileID: 992902075221314768, guid: 1b560fb0efba2cf4e8b27411bb6dd0dd, type: 3}
+    - {fileID: 3696037016774464735, guid: 6474352a9cf87d44597ab278af273349, type: 3}
+    - {fileID: 8040376584949530416, guid: d5263b6571e9429408dbebb5c704f5f3, type: 3}

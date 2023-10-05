@@ -55,7 +55,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2201473647918565495}
   m_Layer: 0
-  m_Name: PlatformGroup.099
+  m_Name: EndPlatformGroup.000
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -18,55 +18,49 @@ namespace Lander {
             if (generator.TileMap == null) return;
             if (generator.OccupiedTilePositions == null) return;
 
-            var blocks = generator.GetWorldSpaceBlockPositions(generator.TileMap, generator.OccupiedTilePositions, generator.AxisDirection);
-            var sp = generator.SpawnPoints;
+            // var blocks = generator.GetWorldSpaceBlockPositions(generator.TileMap, generator.OccupiedTilePositions, generator.AxisDirection);
+            var sp = generator.LocalSpaceBlocks;
 
-            foreach(var block in blocks) {
-                var idx = sp.FindIndex( x => x.Centre == block.Centre);
-                if (idx < 0) {
-                    sp.Add(block);
+            Handles.color = Color.red;
+            Gizmos.color = Color.red;
+
+            if(!Application.isPlaying) {
+                for(int i=0; i< sp.Count; i++) {
+                    Vector3 newPos = Handles.PositionHandle(sp[i].LocalSpawnPoint, Quaternion.identity);
+                    if (newPos != sp[i].LocalSpawnPoint) {
+                        var b = sp[i];
+                        b.LocalSpawnPoint = newPos;
+                        sp[i] = b;
+                    }
                 }
             }
-
-            for(int i=0; i< sp.Count; i++) {
-                Vector3 newPos = Handles.PositionHandle(sp[i].WorldSpawnPoint, Quaternion.identity);
-                if (newPos != sp[i].WorldSpawnPoint) {
-                    var b = sp[i];
-                    b.WorldSpawnPoint = newPos;
-                    sp[i] = b;
-                }
-                Handles.color = Color.red;
-                if (Handles.Button(newPos + Vector3.down.normalized * 1, Quaternion.identity, 0.5f, 0.5f, Handles.SphereHandleCap)) {
-                    if (Application.isPlaying) {
-                        var player = Game.instance.CurrentState.Entities.First(x => (x as Player) != null) as Player;
-                        if (player != null) {
-                            Checkpoint.CurrentSpawnWorldPosition = newPos;
-                            Checkpoint.Respawn(player.transform);
+            else {
+                for(int i = 0; i < generator.Platforms.Count; i++) {
+                    var spawnWorldPosition = generator.Platforms[i].SpawnWorldPosition;
+                    if (Handles.Button(spawnWorldPosition, Quaternion.identity, 0.5f, 0.5f, Handles.SphereHandleCap)) {
+                        if (Application.isPlaying) {
+                            var player = Game.instance.CurrentState.Entities.First(x => (x as Player) != null) as Player;
+                            if (player != null) {
+                                Checkpoint.CurrentSpawnWorldPosition = spawnWorldPosition;
+                                Checkpoint.Respawn(player.transform);
+                            }
                         }
                     }
                 }
             }
 
-            // remove any blocks that are no longer available
-            for(var i = sp.Count - 1; i >= 0; i--) {
-                int idx = blocks.FindIndex( x=> sp[i].Centre == x.Centre);
-                if (idx < 0) {
-                    sp.RemoveAt(i);
-                }
-            }
-
-
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObject(generator, "Change Local Position");
-
-                var so = new SerializedObject(target);
-                for (var i=0; i<sp.Count; i++) {
-                    var element = so.FindProperty("spawnPoints").GetArrayElementAtIndex(i).FindPropertyRelative("WorldSpawnPoint");
-                    element.vector3Value = sp[i].WorldSpawnPoint;
+                if(!Application.isPlaying) {
+                    Undo.RecordObject(generator, "Change Local Position");
+                    var so = new SerializedObject(target);
+                    for (var i=0; i<sp.Count; i++) {
+                        var element = so.FindProperty("localSpaceBlocks").GetArrayElementAtIndex(i).FindPropertyRelative("LocalSpawnPoint");
+                        element.vector3Value = sp[i].LocalSpawnPoint;
+                    }
+                    so.ApplyModifiedProperties();
+                    EditorUtility.SetDirty(so.targetObject);
                 }
-                so.ApplyModifiedProperties();
-                EditorUtility.SetDirty(so.targetObject);
                 // generator.SpawnPoints = sp;
             }
         }

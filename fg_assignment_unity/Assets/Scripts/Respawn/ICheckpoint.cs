@@ -18,9 +18,8 @@ namespace Lander {
 
         private static Vector3 currentSpawnWorldPosition;
 
-        public Vector3 SpawnWorldPosition {
+        public virtual Vector3 SpawnWorldPosition {
             get {
-                if (spawnLocalPosition == Vector3.zero) return Vector3.zero;
                 return transform.TransformPoint(spawnLocalPosition);
             }
         }
@@ -35,7 +34,7 @@ namespace Lander {
 
         #if UNITY_EDITOR
 
-        private void OnDrawGizmos() {
+        protected virtual void OnDrawGizmos() {
             Gizmos.color = (CurrentSpawnWorldPosition == SpawnWorldPosition) ? Color.green : Color.red;
             if (SpawnWorldPosition != Vector3.zero) {
                 Gizmos.DrawWireSphere(transform.TransformPoint(spawnLocalPosition), 0.5f);

@@ -5,9 +5,9 @@ using UnityEngine;
 
 namespace Lander {
     public class Platform : Checkpoint {
-        private PlatformGenerator.TileBlockData tileBlockData;
+        private PlatformGenerator.PlatformData tileBlockData;
 
-        public PlatformGenerator.TileBlockData TileBlockData {
+        public PlatformGenerator.PlatformData TileBlockData {
             get { return tileBlockData; }
             set {
                 tileBlockData = value;
@@ -16,6 +16,7 @@ namespace Lander {
 
         public override Vector3 SpawnWorldPosition {
             get {
+                if (tileBlockData.LocalSpawnPoint == Vector3.zero) return Vector3.zero;
                 return transform.parent.TransformPoint(tileBlockData.LocalSpawnPoint);
             }
         }

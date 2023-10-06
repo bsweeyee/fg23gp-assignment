@@ -24,10 +24,6 @@ namespace Lander {
             }
         }
 
-        public void SetLocalSpawnPoint(Vector3 spawnPointLocal) {
-            spawnLocalPosition = spawnPointLocal;
-        }
-
         public static void Respawn(Transform body) {
             body.position = CurrentSpawnWorldPosition;
         }

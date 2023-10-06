@@ -15,7 +15,15 @@ public class GameSettings : ScriptableObject {
 
     [Header("UI")]
     public PauseUI PauseUIPrefab;
+    public LevelCompleteUI LevelCompleteUIPrefab;
 
-    [FormerlySerializedAs("LevelDataPrefab")] [Header("Level")]
+    [Header("Level")]
+    public float LevelWidth;
+    public float LevelLength;
     public LevelData[] LevelData;
+
+    [Header("Physics layers")]
+    public LayerMask PlayerLayer;
+    public LayerMask ObstacleLayer;
+    public LayerMask TriggerLayer;
 }

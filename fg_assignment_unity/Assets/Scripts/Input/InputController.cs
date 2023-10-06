@@ -23,7 +23,7 @@ namespace Lander {
         public void Notify(InputData data);
     }
 
-    public class InputController : MonoBehaviour, IBaseGameEntity
+    public class InputController : MonoBehaviour, IGameInitializeEntity
     {
         private IInput[] inputs;
         private InputData cachedInput;

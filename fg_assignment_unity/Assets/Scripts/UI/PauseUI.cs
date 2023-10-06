@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PauseUI : MonoBehaviour, IPauseStateEntity, IInput {
+public class PauseUI : MonoBehaviour, ILevelPauseEntity, IInput {
     public bool IsEarlyInitialized { get; private set; }
 
     public bool IsLateInitialized { get; private set; }

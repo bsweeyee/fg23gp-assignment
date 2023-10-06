@@ -19,9 +19,10 @@ public class Init : MonoBehaviour
             var level = Instantiate(gameSettings.LevelPrefab);
 
             var pauseUI = Instantiate(gameSettings.PauseUIPrefab);
+            var levelCompletUI = Instantiate(gameSettings.LevelCompleteUIPrefab);
         }
 
         game.Initialize(gameSettings);
-        game.CurrentState = Game.PLAY_STATE;
+        game.CurrentState = Game.START_STATE;
     }
 }

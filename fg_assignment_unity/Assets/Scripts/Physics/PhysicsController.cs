@@ -1,15 +1,5 @@
-using Lander.GameState;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Linq;
-using System.Xml;
-using Unity.VisualScripting;
-using Unity.VisualScripting.Dependencies.NCalc;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Utilities;
 
 namespace Lander {
     namespace Physics {
@@ -46,6 +36,11 @@ namespace Lander {
             private UnityEvent onFirstUnGrounded;
             
             private Vector3 currentRaycastSkinWidth;
+
+            public Vector3 Gravity {
+                get { return gravity; }
+                set { gravity = value; }
+            }
 
             public Vector3 CurrentVelocity {
                 get {
@@ -135,7 +130,7 @@ namespace Lander {
             }
             
             public void Reset() {
-                currentVelocity = gravity;
+                currentVelocity = Vector3.zero;
                 externalAcceleration = Vector3.zero;
                 dragCoefficientRate = 1;
                 input = Vector3.zero;                                            
@@ -226,7 +221,7 @@ namespace Lander {
                             IsGrounded = true;                            
                         }
                         else if (ySign > 0) {
-                            var testHit = Physics2D.Raycast(transform.position, xSign * Vector3.right, size.x + currentRaycastSkinWidth.x, ~layer);                    
+                            var testHit = Physics2D.Raycast(transform.position, xSign * Vector3.right, size.x + currentRaycastSkinWidth.x, layer);                    
                             if (testHit.collider == null) {
                                 vx = currentVelocity.x;
                             }
@@ -252,7 +247,7 @@ namespace Lander {
                 bool isHit = false;
                 for(int i = 0; i < numOfCasts; i++) {
                     var pos = position + ((Vector3)size / 2) + interval * i;  
-                    var testHit = Physics2D.Raycast(pos, castDirection, castWidth, ~layer);                    
+                    var testHit = Physics2D.Raycast(pos, castDirection, castWidth, layer);                    
                     if (testHit.collider) {
                         if (testHit.collider != null && testHit.distance <= hit.distance) {
                             hit = testHit;

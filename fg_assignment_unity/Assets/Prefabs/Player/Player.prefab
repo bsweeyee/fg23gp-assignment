@@ -699,6 +699,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   controlAcceleration: {x: 50, y: 150, z: 0}
+  gravity: {x: 0, y: -45, z: 0}
   flightDirectionControlValue: 0.5
   boostMinimumDirection: 0.8
   boostMaximumDirection: 0
@@ -725,7 +726,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49349f5c07ddab3419f38a202c6bb220, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gravity: {x: 0, y: -45, z: 0}
+  gravity: {x: 0, y: 0, z: 0}
   externalAccelerationFalloffCurve:
     serializedVersion: 2
     m_Curve:

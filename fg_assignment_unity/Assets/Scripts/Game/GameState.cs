@@ -8,8 +8,6 @@ using UnityEngine;
 namespace Lander {
     namespace GameState {
         public interface IBaseGameState {
-            public void EarlyInitialize(Game game);
-            public void LateInitialize(Game game);
             public void OnEnter(Game game, IBaseGameState previous);
             public void OnExit(Game game, IBaseGameState current);
             public void OnTick(Game game, float dt);
@@ -18,23 +16,9 @@ namespace Lander {
         
         public abstract class BaseGameState : IBaseGameState {            
             private Game game;
-            protected IBaseGameEntity[] entities;
-            public IBaseGameEntity[] Entities {
+            protected IGameInitializeEntity[] entities;
+            public IGameInitializeEntity[] Entities {
                 get { return entities; }
-            }
-
-            public virtual void EarlyInitialize(Game game) { 
-                foreach(var entity in entities) {                    
-                    entity.EarlyInitialize(game);
-                }
-                this.game = game;                
-            }
-
-            public virtual void LateInitialize(Game game) {
-                foreach(var entity in entities) {                    
-                    entity.LateInitialize(game);
-                }
-                this.game = game;
             }
 
             public virtual void OnEnter(Game game, IBaseGameState previous) {
@@ -51,95 +35,112 @@ namespace Lander {
         }
 
         public class StartState : BaseGameState {
-            public override void EarlyInitialize(Game game) {
-                entities = GameObject.FindObjectsOfType<MonoBehaviour>(true).OfType<IStartStateEntity>().ToArray();
-                base.EarlyInitialize(game);
-            }
-
             public override void OnEnter(Game game, IBaseGameState previous) {
+                entities = GameObject.FindObjectsOfType<MonoBehaviour>(true).OfType<ILevelStartEntity>().ToArray();
                 foreach(var obs in entities) {
-                    var o = obs as IStartStateEntity;
+                    var o = obs as ILevelStartEntity;
                     o.OnEnter(game, previous);
                 }
             }            
             public override void OnExit(Game game, IBaseGameState current) {
                 foreach(var obs in entities) {
-                    var o = obs as IStartStateEntity;
+                    var o = obs as ILevelStartEntity;
                     o.OnExit(game, current);
                 }
             }            
             public override void OnTick(Game game, float dt) {
                 foreach(var obs in entities) {
-                    var o = obs as IStartStateEntity;
+                    var o = obs as ILevelStartEntity;                    
                     o.OnTick(game, dt);
                 }
             }
             public override void OnFixedTick(Game game, float dt) {
                 foreach(var obs in entities) {
-                    var o = obs as IStartStateEntity;
+                    var o = obs as ILevelStartEntity;
                     o.OnFixedTick(game, dt);
                 }
             }  
         }
 
         public class PlayState : BaseGameState {
-            public override void EarlyInitialize(Game game) {
-                entities = GameObject.FindObjectsOfType<MonoBehaviour>(true).OfType<IPlayStateEntity>().ToArray();
-                base.EarlyInitialize(game);
-            }
             public override void OnEnter(Game game, IBaseGameState previous) {
+                entities = GameObject.FindObjectsOfType<MonoBehaviour>(true).OfType<ILevelPlayEntity>().ToArray();
                 foreach(var obs in entities) {
-                    var o = obs as IPlayStateEntity;
+                    var o = obs as ILevelPlayEntity;                    
                     o.OnEnter(game, previous);
                 }
             }            
             public override void OnExit(Game game, IBaseGameState current) {
                 foreach(var obs in entities) {
-                    var o = obs as IPlayStateEntity;
+                    var o = obs as ILevelPlayEntity;
                     o.OnExit(game, current);
                 }
             }            
             public override void OnTick(Game game, float dt) {
                 foreach(var obs in entities) {
-                    var o = obs as IPlayStateEntity;
+                    var o = obs as ILevelPlayEntity;
                     o.OnTick(game, dt);
                 }
             }
             public override void OnFixedTick(Game game, float dt) {
                 foreach(var obs in entities) {
-                    var o = obs as IPlayStateEntity;
+                    var o = obs as ILevelPlayEntity;
                     o.OnFixedTick(game, dt);
                 }
             }  
         }        
 
         public class PauseState : BaseGameState {
-            public override void EarlyInitialize(Game game) {
-                entities = GameObject.FindObjectsOfType<MonoBehaviour>(true).OfType<IPauseStateEntity>().ToArray();
-                base.EarlyInitialize(game);
-            }
-
             public override void OnEnter(Game game, IBaseGameState previous) {
+                entities = GameObject.FindObjectsOfType<MonoBehaviour>(true).OfType<ILevelPauseEntity>().ToArray();
                 foreach(var obs in entities) {
-                    var o = obs as IPauseStateEntity;
+                    var o = obs as ILevelPauseEntity;
                     o.OnEnter(game, previous);
                 }
             }            
             public override void OnExit(Game game, IBaseGameState current) {
                 foreach(var obs in entities) {
-                    var o = obs as IPauseStateEntity;
+                    var o = obs as ILevelPauseEntity;
                     o.OnExit(game, current);
                 }
             }            
             public override void OnTick(Game game, float dt) {
                 foreach(var obs in entities) {
-                    var o = obs as IPauseStateEntity;
+                    var o = obs as ILevelPauseEntity;
                     o.OnTick(game, dt);
                 }
             }
             public override void OnFixedTick(Game game, float dt) {
                 foreach(var obs in entities) {
-                    var o = obs as IPauseStateEntity;
+                    var o = obs as ILevelPauseEntity;
+                    o.OnFixedTick(game, dt);
+                }
+            }
+        }
+        
+        public class LevelCompleteState : BaseGameState {
+            public override void OnEnter(Game game, IBaseGameState previous) {
+                entities = GameObject.FindObjectsOfType<MonoBehaviour>(true).OfType<ILevelCompleteEntity>().ToArray();
+                foreach(var obs in entities) {
+                    var o = obs as ILevelCompleteEntity;
+                    o.OnEnter(game, previous);
+                }
+            }            
+            public override void OnExit(Game game, IBaseGameState current) {
+                foreach(var obs in entities) {
+                    var o = obs as ILevelCompleteEntity;
+                    o.OnExit(game, current);
+                }
+            }            
+            public override void OnTick(Game game, float dt) {
+                foreach(var obs in entities) {
+                    var o = obs as ILevelCompleteEntity;
+                    o.OnTick(game, dt);
+                }
+            }
+            public override void OnFixedTick(Game game, float dt) {
+                foreach(var obs in entities) {
+                    var o = obs as ILevelCompleteEntity;
                     o.OnFixedTick(game, dt);
                 }
             }

@@ -8,7 +8,7 @@ using UnityEngine.UI;
 using UnityEngine.Video;
 
 namespace Lander {
-    public class Player : MonoBehaviour, IPlayStateEntity, IInput, IDebug {
+    public class Player : MonoBehaviour, ILevelStartEntity, ILevelPlayEntity, IInput, IDebug {
         public enum EPlayerState {
             NONE,
             ALIVE,
@@ -26,6 +26,7 @@ namespace Lander {
         [SerializeField] private AnimationCurve jolt;
         [SerializeField] private AnimationCurve lift;
         [SerializeField] private Vector3 controlAcceleration;
+        [SerializeField] private Vector3 gravity;
 
         [Header("Flight")]
         [SerializeField][Range(0, 1)] private float flightDirectionControlValue;
@@ -119,13 +120,17 @@ namespace Lander {
 
         public bool IsLateInitialized { get; private set; }
 
+        bool IGameInitializeEntity.IsEarlyInitialized => throw new System.NotImplementedException();
+
+        bool IGameInitializeEntity.IsLateInitialized => throw new System.NotImplementedException();
+
         public void EarlyInitialize(Game game) {
             if (IsEarlyInitialized) return;
 
             physics = GetComponent<PhysicsController>();
             animator = GetComponentInChildren<Animator>();
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-            gameObject.layer = (int)Mathf.Log(physicsLayer, 2);
+            gameObject.layer = (int)Mathf.Log(game.GameSettings.PlayerLayer, 2);
 
             targetBoostDirection = 1;
 
@@ -141,9 +146,7 @@ namespace Lander {
         public void LateInitialize(Game game) {
             if (IsLateInitialized) return;
 
-            Checkpoint.Respawn(transform);
-
-            physics.Layer = physicsLayer;
+            physics.Layer = game.GameSettings.ObstacleLayer;
             physics.OnFirstGrounded.AddListener( OnFirstGrounded );
             physics.OnFirstUnGrounded.AddListener( OnFirstUnGrounded );
 
@@ -152,7 +155,7 @@ namespace Lander {
             IsLateInitialized = true;
         }
 
-        void IPlayStateEntity.OnFixedTick(Game game, float dt) {
+        void ILevelPlayEntity.OnFixedTick(Game game, float dt) {
             switch(CurrentPlayerState) {
                 case EPlayerState.ALIVE:
                 FixedTickAlive(game, dt);
@@ -160,7 +163,7 @@ namespace Lander {
             }
         }
 
-        void IPlayStateEntity.OnTick(Game game, float dt) {
+        void ILevelPlayEntity.OnTick(Game game, float dt) {
             switch(CurrentPlayerState)
             {
                 case EPlayerState.ALIVE:
@@ -172,11 +175,26 @@ namespace Lander {
             }
         }
 
-        void IPlayStateEntity.OnEnter(Game game, IBaseGameState previous) {
-
+        void ILevelPlayEntity.OnEnter(Game game, IBaseGameState previous) {
+            physics.Gravity = gravity;
+            physics.Reset();
+            controlRate = 0;
         }
 
-        void IPlayStateEntity.OnExit(Game game, IBaseGameState current) {
+        void ILevelPlayEntity.OnExit(Game game, IBaseGameState current) {
+        }
+
+        void ILevelStartEntity.OnEnter(Game game, IBaseGameState previous) {
+            currentEnergyLevel = maxEnergy;
+        }
+
+        void ILevelStartEntity.OnExit(Game game, IBaseGameState current) {
+        }
+
+        void ILevelStartEntity.OnTick(Game game, float dt) {
+        }
+ 
+        void ILevelStartEntity.OnFixedTick(Game game, float dt) {
         }
 
         private void FixedTickAlive(Game game, float dt) {
@@ -236,7 +254,7 @@ namespace Lander {
                     break;
             }
 
-            var obstacleHit = Physics2D.OverlapBox(transform.position, physics.SizeWithCast + Vector3.one * 0.1f, 0, ~physicsLayer);
+            var obstacleHit = Physics2D.OverlapBox(transform.position, physics.SizeWithCast + Vector3.one * 0.1f, 0, game.GameSettings.ObstacleLayer);
 
             // death check
             if (obstacleHit != null) {

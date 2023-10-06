@@ -14,6 +14,7 @@ namespace Lander {
         public static PlayState PLAY_STATE;
         public static StartState START_STATE;
         public static GameState.PauseState PAUSE_STATE;
+        public static LevelCompleteState LEVEL_COMPLETE_STATE;
 
         public static Game instance;
 
@@ -23,11 +24,24 @@ namespace Lander {
 
         private InputController inputController;
         private LevelController levelController;
+        private CameraController cameraController;
         private Player player;
         private Physics.IPhysics[] physics;
         private IDebug[] debugs;
         private BaseGameState currentState;
         private GameSettings gameSettings;
+
+        public Player Player {
+            get {
+                return player;
+            }
+        }
+
+        public CameraController CameraController {
+            get {
+                return cameraController;
+            }
+        }
 
         public BaseGameState CurrentState {
             get { return currentState; }
@@ -80,23 +94,22 @@ namespace Lander {
         void EarlyInitialize() {
             inputController = FindObjectOfType<InputController>(true);
             levelController = FindObjectOfType<LevelController>(true);
+            cameraController = FindObjectOfType<CameraController>(true);
             player = FindObjectOfType<Player>(true);
 
             physics = FindObjectsOfType<MonoBehaviour>(true).OfType<Physics.IPhysics>().ToArray();
             debugs = GameObject.FindObjectsOfType<MonoBehaviour>(true).OfType<IDebug>().ToArray();
-            var baseEntities = FindObjectsOfType<MonoBehaviour>(true).OfType<IBaseGameEntity>().ToArray();
+            var baseEntities = FindObjectsOfType<MonoBehaviour>(true).OfType<IGameInitializeEntity>().ToArray();
 
             inputController?.EarlyInitialize(this);
             levelController?.EarlyInitialize(this);
+            cameraController?.EarlyInitialize(this);
             player?.EarlyInitialize(this);
 
             START_STATE = new StartState();
             PLAY_STATE = new PlayState();
             PAUSE_STATE = new GameState.PauseState();
-
-            START_STATE.EarlyInitialize(this);
-            PLAY_STATE.EarlyInitialize(this);
-            PAUSE_STATE.EarlyInitialize(this);
+            LEVEL_COMPLETE_STATE = new LevelCompleteState();            
 
             // we have to run initialize here for all other entities that are not part of the state
             foreach(var e in baseEntities) {
@@ -104,12 +117,8 @@ namespace Lander {
             }
         }
 
-        void LateInitialize() {
-            START_STATE.LateInitialize(this);
-            PLAY_STATE.LateInitialize(this);
-            PAUSE_STATE.LateInitialize(this);
-
-            var baseEntities = FindObjectsOfType<MonoBehaviour>(true).OfType<IBaseGameEntity>().ToArray();
+        void LateInitialize() {            
+            var baseEntities = FindObjectsOfType<MonoBehaviour>(true).OfType<IGameInitializeEntity>().ToArray();
 
             // we have to run initialize here for all other entities that are not part of the state
             foreach(var e in baseEntities) {

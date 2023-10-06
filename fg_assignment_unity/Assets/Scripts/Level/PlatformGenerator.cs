@@ -14,14 +14,14 @@ using UnityEngine.Tilemaps;
 namespace Lander {
 
     [ExecuteInEditMode]
-    public class PlatformGenerator : MonoBehaviour, IPlayStateEntity {
+    public class PlatformGenerator : MonoBehaviour, ILevelStartEntity {
         [Serializable]
-        public struct TileBlockData {
+        public struct PlatformData {
             public Vector3 LocalSpaceCentre;
             public Vector3 Size;
-            [FormerlySerializedAs("WorldSpawnPoint")] public Vector3 LocalSpawnPoint;
+            public Vector3 LocalSpawnPoint;
 
-            public TileBlockData(Vector3 localSpaceCentre, Vector3 size) {
+            public PlatformData(Vector3 localSpaceCentre, Vector3 size) {
                 this.LocalSpaceCentre = localSpaceCentre;
                 this.Size = size;
                 this.LocalSpawnPoint = localSpaceCentre;
@@ -41,7 +41,7 @@ namespace Lander {
 
         private List<Vector3Int> occupiedTilePositions;
         private List<Platform> platforms;
-        [SerializeField] private List<TileBlockData> localSpaceBlocks;
+        [SerializeField] private List<PlatformData> localSpaceBlocks;
 
         public Tilemap TileMap {
             get {
@@ -61,7 +61,7 @@ namespace Lander {
             }
         }
 
-        public List<TileBlockData> LocalSpaceBlocks {
+        public List<PlatformData> LocalSpaceBlocks {
             get {
                 return localSpaceBlocks;
             }
@@ -92,9 +92,30 @@ namespace Lander {
                 if(tMap.HasTile(position)) {
                     occupiedTilePositions.Add(position);
                 }
-            }
+            }            
+            IsEarlyInitialized = true;
+        }
 
-            // var wsBlocks = GetWorldSpaceBlockPositions(tMap, occupiedTilePositions, axisDirection);
+        public void LateInitialize(Game game) {
+            if (IsLateInitialized) return;
+
+            IsLateInitialized = true;
+        }
+
+        void ILevelStartEntity.OnEnter(Game game, IBaseGameState previous) {
+        }
+
+        void ILevelStartEntity.OnExit(Game game, IBaseGameState current) {
+
+        }
+        void ILevelStartEntity.OnTick(Game game, float dt) {
+
+        }
+        void ILevelStartEntity.OnFixedTick(Game game, float dt) {
+
+        }
+
+        public void GeneratePlatform(GameSettings settings) {
             foreach(var block in localSpaceBlocks) {
                 var go = new GameObject("Platform");
                 go.transform.parent = tMap.transform;
@@ -107,33 +128,13 @@ namespace Lander {
                 bx.size = block.Size;
 
                 platforms.Add(platform);
+
+                go.layer = gameObject.layer = (int)Mathf.Log(settings.ObstacleLayer, 2);
             }
-
-            IsEarlyInitialized = true;
         }
 
-        public void LateInitialize(Game game) {
-            if (IsLateInitialized) return;
-
-            IsLateInitialized = true;
-        }
-
-        public void OnEnter(Game game, IBaseGameState previous) {
-
-        }
-
-        public void OnExit(Game game, IBaseGameState current) {
-
-        }
-        public void OnTick(Game game, float dt) {
-
-        }
-        public void OnFixedTick(Game game, float dt) {
-
-        }
-
-        public List<TileBlockData> GetLocalSpaceBlockPositions(Tilemap tm, List<Vector3Int> tiles, EAxisDirection mainAxis = 0) {
-            List<TileBlockData> localSpaceBlockCentre = new List<TileBlockData>();
+        public List<PlatformData> GetLocalSpaceBlockPositions(Tilemap tm, List<Vector3Int> tiles, EAxisDirection mainAxis = 0) {
+            List<PlatformData> localSpaceBlockCentre = new List<PlatformData>();
             if (tiles.Count <= 0) return localSpaceBlockCentre;
 
             var sortByMainAxis = (mainAxis == 0) ? tiles.OrderBy(x => x.x).OrderBy(x => x.y).ToArray() : tiles.OrderBy(x => x.y).OrderBy(x => x.x).ToArray();
@@ -161,7 +162,7 @@ namespace Lander {
                         var size = ((et as Tile).sprite.bounds.size + (st as Tile).sprite.bounds.size) / 2;
                         if (mainAxis == 0) size.x *= length;
                         else size.y *= length;
-                        TileBlockData data = new TileBlockData(center, size);
+                        PlatformData data = new PlatformData(center, size);
                         if(localSpaceBlocks != null && localSpaceBlocks.Count > 0) {
                             var p = localSpaceBlocks.Find(x => x.LocalSpaceCentre == center);
                             if(p.LocalSpaceCentre == center) {
@@ -193,7 +194,7 @@ namespace Lander {
                 var size = ((et as Tile).sprite.bounds.size + (st as Tile).sprite.bounds.size) / 2;
                 if (mainAxis == 0) size.x *= length;
                 else size.y *= length;
-                TileBlockData data = new TileBlockData(center, size);
+                PlatformData data = new PlatformData(center, size);
 
                 if(localSpaceBlocks != null && localSpaceBlocks.Count > 0) {
                     var p = localSpaceBlocks.Find(x => x.LocalSpaceCentre == center);
@@ -234,7 +235,7 @@ namespace Lander {
         private void OnDrawGizmos() {
             if (occupiedTilePositions == null) occupiedTilePositions = new List<Vector3Int>();
             if (tMapRenderer == null) tMapRenderer = GetComponentInChildren<TilemapRenderer>();
-            if (localSpaceBlocks == null) localSpaceBlocks = new List<TileBlockData>();
+            if (localSpaceBlocks == null) localSpaceBlocks = new List<PlatformData>();
             if(tMap == null) {
                 tMap = GetComponentInChildren<Tilemap>();
                 foreach(var position in tMap.cellBounds.allPositionsWithin) {
@@ -267,6 +268,7 @@ namespace Lander {
                 }
             }
             else {
+                if (platforms == null) return;
                 foreach(var platform in platforms) {
                     Gizmos.color = Color.black;
                     Gizmos.DrawSphere(platform.transform.position, 0.25f);

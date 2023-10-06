@@ -6,7 +6,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PlayerUI : MonoBehaviour, IPlayStateEntity, IPlayerObserver
+public class PlayerUI : MonoBehaviour, ILevelStartEntity, ILevelPlayEntity, IPlayerObserver
 {
     [SerializeField][Range(0, 1)] private float speedWarningOnThreshold = 0.9f; 
     [SerializeField][Range(0, 1)] private float speedWarningOffThreshold = 0.5f; 
@@ -24,7 +24,11 @@ public class PlayerUI : MonoBehaviour, IPlayStateEntity, IPlayerObserver
     public bool IsEarlyInitialized { get; private set; }
 
     public bool IsLateInitialized { get; private set; }
-    
+
+    bool IGameInitializeEntity.IsEarlyInitialized => throw new System.NotImplementedException();
+
+    bool IGameInitializeEntity.IsLateInitialized => throw new System.NotImplementedException();
+
     public void OnBoostDirectionChange(Vector3 boostDirection) {
         if(boostDirection.magnitude == 0) {
             arrowUI.gameObject.SetActive(false);
@@ -66,7 +70,7 @@ public class PlayerUI : MonoBehaviour, IPlayStateEntity, IPlayerObserver
         warningBar.fillAmount = Mathf.InverseLerp(0, velocityDeathThreshold, currentVelocity.magnitude);
     }
     
-    void IBaseGameEntity.EarlyInitialize(Game game) {
+    void IGameInitializeEntity.EarlyInitialize(Game game) {
         if (IsEarlyInitialized) return;
 
         arrowUI = transform.Find("Arrow");
@@ -87,24 +91,24 @@ public class PlayerUI : MonoBehaviour, IPlayStateEntity, IPlayerObserver
         IsEarlyInitialized = true;
     }
     
-    void IBaseGameEntity.LateInitialize(Game game) {
+    void IGameInitializeEntity.LateInitialize(Game game) {
         if (IsLateInitialized) return;
 
         IsLateInitialized = true;
     }
     
-    void IPlayStateEntity.OnTick(Game game, float dt) {
+    void ILevelPlayEntity.OnTick(Game game, float dt) {
     }
     
-    void IPlayStateEntity.OnFixedTick(Game game, float dt) {
+    void ILevelPlayEntity.OnFixedTick(Game game, float dt) {
     }
     
-    void IPlayStateEntity.OnEnter(Game game, IBaseGameState previous) {
-        energyUI.gameObject.SetActive(true);
+    void ILevelPlayEntity.OnEnter(Game game, IBaseGameState previous) {        
+        energyUI?.gameObject.SetActive(true);        
         jumpIcon?.transform.parent.gameObject.SetActive(true);
     }
 
-    void IPlayStateEntity.OnExit(Game game, IBaseGameState previous) {
+    void ILevelPlayEntity.OnExit(Game game, IBaseGameState previous) {     
     }
 
     void IPlayerObserver.OnEnterState(Player.EPlayerState old, Player.EPlayerState current) {
@@ -123,5 +127,19 @@ public class PlayerUI : MonoBehaviour, IPlayStateEntity, IPlayerObserver
     }
 
     void IPlayerObserver.OnExitState(Player.EPlayerState old, Player.EPlayerState current) {
+    }
+
+    void ILevelStartEntity.OnEnter(Game game, IBaseGameState previous) {
+        arrowUI?.gameObject.SetActive(false);
+        highSpeedUI?.gameObject.SetActive(false);
+    }
+
+    void ILevelStartEntity.OnExit(Game game, IBaseGameState current) {
+    }
+
+    void ILevelStartEntity.OnTick(Game game, float dt) {
+    }
+
+    void ILevelStartEntity.OnFixedTick(Game game, float dt) {
     }
 }

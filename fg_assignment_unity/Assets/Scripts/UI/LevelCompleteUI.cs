@@ -10,10 +10,6 @@ namespace Lander {
 
         public bool IsLateInitialized { get; private set; }
 
-        bool IGameInitializeEntity.IsEarlyInitialized => throw new System.NotImplementedException();
-
-        bool IGameInitializeEntity.IsLateInitialized => throw new System.NotImplementedException();
-
         [SerializeField] private float sweepSpeed = 2 ;
 
         private Canvas canvas;

@@ -3,7 +3,7 @@ using UnityEngine.Events;
 
 namespace Lander {
     namespace Physics {
-        public class PhysicsController : MonoBehaviour, IPhysics, IDebug {
+        public class PhysicsController : MonoBehaviour, IPhysics {
 
             [Header("Acceleration")]
             [SerializeField] private Vector3 gravity;
@@ -22,6 +22,7 @@ namespace Lander {
             [SerializeField] private Vector3 size = Vector3.one;
             [SerializeField][Min(2)] private int numOfCasts = 3;
             [SerializeField] private float raycastSkinWidth = 1;                        
+            [SerializeField] private LayerMask layer;
 
             private BoxCollider2D boxCollider2D;
             private Vector3 currentVelocity;
@@ -30,7 +31,6 @@ namespace Lander {
             private float dragCoefficientRate = 1;
             private float externalAccelerationFallOffRate;
             private bool isGrounded;
-            private LayerMask layer;
 
             private UnityEvent onFirstGrounded;
             private UnityEvent onFirstUnGrounded;
@@ -113,6 +113,8 @@ namespace Lander {
             }           
 
             public void OnFixedTick(Game game, float dt) {
+                if (!gameObject.activeSelf) return;
+
                 currentVelocity = EvaluateAcceleration(dt);        
                 currentVelocity = EvaluateCollision(dt);
                 
@@ -126,13 +128,14 @@ namespace Lander {
             public void AddAcceleration(Vector3 a) {
                 externalAcceleration += a;
                 dragCoefficientRate = 0;
-                currentVelocity = Vector3.zero;                
+                currentVelocity = Vector3.zero;
             }
             
             public void Reset() {
                 currentVelocity = Vector3.zero;
-                externalAcceleration = Vector3.zero;
+                externalAcceleration = Vector3.zero;                
                 dragCoefficientRate = 1;
+                externalAccelerationFallOffRate = 0;
                 input = Vector3.zero;                                            
             }
 
@@ -162,7 +165,6 @@ namespace Lander {
                     externalAccelerationFallOffRate += dt * fallOffSpeed;
                     var t = externalAccelerationFalloffCurve.Evaluate(externalAccelerationFallOffRate);
                     finalExternalAcceleration = Vector3.Lerp(Vector3.zero, externalAcceleration, t);                                                            
-
                 }
                 if (finalExternalAcceleration.magnitude < 0.01f) {
                     externalAcceleration = Vector3.zero;
@@ -279,13 +281,7 @@ namespace Lander {
                 // draw current velocity
                 Gizmos.color = Color.blue;
                 Gizmos.DrawLine(transform.position, transform.position + (currentVelocity.normalized * 0.5f));                
-            }
-
-            public void OnDrawGUI() {
-                string vel = $"current velocity: {currentVelocity}, {currentVelocity.magnitude}";
-                
-                GUILayout.Label(vel);
-            }            
+            }                     
 #endif
         }
     }

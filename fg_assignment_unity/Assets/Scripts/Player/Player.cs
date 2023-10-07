@@ -73,7 +73,7 @@ namespace Lander {
 
         private EPlayerState currentPlayerState;
 
-        private int CurrentNumOfBoosts {
+        public int CurrentNumOfBoosts {
             get {
                 return currentNumOfBoosts;
             }
@@ -85,7 +85,7 @@ namespace Lander {
             }
         }
 
-        private EPlayerState CurrentPlayerState {
+        public EPlayerState CurrentPlayerState {
             get { return currentPlayerState; }
             set {
                 var previous = currentPlayerState;
@@ -179,6 +179,7 @@ namespace Lander {
             physics.Gravity = gravity;
             physics.Reset();
             controlRate = 0;
+            targetFlightDirection = Vector3.zero;
         }
 
         void ILevelPlayEntity.OnExit(Game game, IBaseGameState current) {
@@ -186,6 +187,7 @@ namespace Lander {
 
         void ILevelStartEntity.OnEnter(Game game, IBaseGameState previous) {
             currentEnergyLevel = maxEnergy;
+            game.PhysicsTickFactor = 1;         
         }
 
         void ILevelStartEntity.OnExit(Game game, IBaseGameState current) {
@@ -310,6 +312,7 @@ namespace Lander {
             animator.SetBool("isDead", true);
             physics.Reset();
             controlRate = 0;
+            targetFlightDirection = Vector3.zero;
         }
 
         private float EvaluateControlRate(Vector3 movement, float dt) {
@@ -367,7 +370,7 @@ namespace Lander {
         }
 
         void IInput.Notify(InputData data) {
-            if (data.Paused || game.CurrentState == Game.PAUSE_STATE) return;
+            if (data.Paused || game.CurrentState != Game.PLAY_STATE) return;
 
             if (movement.x != data.Movement.x) controlRate = 0;
 
@@ -412,6 +415,10 @@ namespace Lander {
         }
 
         public void OnDrawGUI() {
+            string vel = $"current velocity: {physics.CurrentVelocity}, {physics.CurrentVelocity.magnitude}";
+                
+            GUILayout.Label(vel);   
+            
             string energy = $"energy level: {currentEnergyLevel}";
 
             GUILayout.Label(energy);

@@ -17,9 +17,12 @@ public class Init : MonoBehaviour
             var player = Instantiate(gameSettings.PlayerPrefab);
             var input = Instantiate(gameSettings.InputPrefab);
             var level = Instantiate(gameSettings.LevelPrefab);
+            var physicsInteractor = Instantiate(gameSettings.PhysicsInteractorPrefab);
+            var particleController = Instantiate(gameSettings.ParticleControllerPrefab);
 
             var pauseUI = Instantiate(gameSettings.PauseUIPrefab);
             var levelCompletUI = Instantiate(gameSettings.LevelCompleteUIPrefab);
+            var levelEndUI = Instantiate(gameSettings.LevelEndUIPrefab);
         }
 
         game.Initialize(gameSettings);

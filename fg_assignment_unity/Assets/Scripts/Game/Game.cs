@@ -7,6 +7,7 @@ using UnityEditor;
 using Lander.GameState;
 using System;
 using Unity.VisualScripting;
+using System.Drawing;
 
 namespace Lander {
     public class Game : MonoBehaviour, IDebug
@@ -15,6 +16,7 @@ namespace Lander {
         public static StartState START_STATE;
         public static GameState.PauseState PAUSE_STATE;
         public static LevelCompleteState LEVEL_COMPLETE_STATE;
+        public static LevelEndState LEVEL_END_STATE;
 
         public static Game instance;
 
@@ -25,6 +27,8 @@ namespace Lander {
         private InputController inputController;
         private LevelController levelController;
         private CameraController cameraController;
+        private PhysicsInteractorController physicsInteractorController;
+        private ParticleController particleController;
         private Player player;
         private Physics.IPhysics[] physics;
         private IDebug[] debugs;
@@ -40,6 +44,12 @@ namespace Lander {
         public CameraController CameraController {
             get {
                 return cameraController;
+            }
+        }
+
+        public ParticleController ParticleController {
+            get {
+                return particleController;
             }
         }
 
@@ -90,26 +100,31 @@ namespace Lander {
 
             Destroy(gameObject);
         }
-
+       
         void EarlyInitialize() {
             inputController = FindObjectOfType<InputController>(true);
             levelController = FindObjectOfType<LevelController>(true);
             cameraController = FindObjectOfType<CameraController>(true);
+            physicsInteractorController = FindObjectOfType<PhysicsInteractorController>(true);
+            particleController = FindObjectOfType<ParticleController>(true);
             player = FindObjectOfType<Player>(true);
-
-            physics = FindObjectsOfType<MonoBehaviour>(true).OfType<Physics.IPhysics>().ToArray();
-            debugs = GameObject.FindObjectsOfType<MonoBehaviour>(true).OfType<IDebug>().ToArray();
-            var baseEntities = FindObjectsOfType<MonoBehaviour>(true).OfType<IGameInitializeEntity>().ToArray();
 
             inputController?.EarlyInitialize(this);
             levelController?.EarlyInitialize(this);
             cameraController?.EarlyInitialize(this);
+            physicsInteractorController?.EarlyInitialize(this);
+            particleController?.EarlyInitialize(this);
             player?.EarlyInitialize(this);
 
+            physics = FindObjectsOfType<MonoBehaviour>(true).OfType<Physics.IPhysics>().ToArray();
+            debugs = GameObject.FindObjectsOfType<MonoBehaviour>(true).OfType<IDebug>().ToArray();
+            var baseEntities = FindObjectsOfType<MonoBehaviour>(true).OfType<IGameInitializeEntity>().ToArray();
+            
             START_STATE = new StartState();
             PLAY_STATE = new PlayState();
             PAUSE_STATE = new GameState.PauseState();
-            LEVEL_COMPLETE_STATE = new LevelCompleteState();            
+            LEVEL_COMPLETE_STATE = new LevelCompleteState();
+            LEVEL_END_STATE = new LevelEndState();            
 
             // we have to run initialize here for all other entities that are not part of the state
             foreach(var e in baseEntities) {
@@ -145,7 +160,8 @@ namespace Lander {
         }
 
 #if UNITY_EDITOR
-        void OnGUI() {
+        string stateName = "";
+        void OnGUI() {            
             if (debugs != null) {
                 foreach (var debug in debugs) {
                     debug.OnDrawGUI();
@@ -157,6 +173,31 @@ namespace Lander {
             string currentState = $"current state: {this.currentState.ToString()}";
 
             GUILayout.Label(currentState);
+            using (var horizontalScope = new GUILayout.HorizontalScope()) {
+                if (GUILayout.Button("PLAY")) {
+                    var pgs = FindObjectsOfType<PlatformGenerator>();
+                    foreach(var pg in pgs) {
+                        pg.EarlyInitialize(this);
+                        pg.GeneratePlatform(GameSettings);
+                    }
+                    if (pgs.Length > 0) {
+                        var platformGenerator = pgs.First(x => x.AxisDirection == PlatformGenerator.EAxisDirection.X);
+                        if(platformGenerator.LocalSpaceBlocks != null && platformGenerator.LocalSpaceBlocks.Count > 0) {
+                            Checkpoint.CurrentSpawnWorldPosition = platformGenerator.LocalSpaceBlocks[0].LocalSpawnPoint;
+                        }
+                    }
+                    Checkpoint.Respawn(player.transform);
+                    cameraController.FollowTarget = player.transform;
+                    cameraController.transform.position = cameraController.TargetPosition;
+                    CurrentState = PLAY_STATE;                    
+                }
+                if(GUILayout.Button("LEVEL COMPLETE")) {
+                    CurrentState = LEVEL_COMPLETE_STATE;
+                }
+                if(GUILayout.Button("LEVEL END")) {
+                    CurrentState = LEVEL_END_STATE;
+                }
+            }
         }
 #endif
     }

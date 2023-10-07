@@ -25,8 +25,8 @@ namespace Lander {
         }       
 
         public void OnEnter(Game game, IBaseGameState previous) {            
-            onTrigger = new UnityEvent();
-            onTrigger.AddListener( () => {
+            onTrigger = new UnityEvent<Collider2D>();
+            onTrigger.AddListener( (Collider2D collider) => {
                 game.CurrentState = Game.LEVEL_COMPLETE_STATE;
             });            
         }

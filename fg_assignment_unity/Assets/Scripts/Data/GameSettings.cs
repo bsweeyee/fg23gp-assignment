@@ -12,15 +12,24 @@ public class GameSettings : ScriptableObject {
     public Player PlayerPrefab;
     public InputController InputPrefab;
     public LevelController LevelPrefab;
+    public PhysicsInteractorController PhysicsInteractorPrefab;
+    public ParticleController ParticleControllerPrefab;
 
     [Header("UI")]
     public PauseUI PauseUIPrefab;
     public LevelCompleteUI LevelCompleteUIPrefab;
+    public LevelEndUI LevelEndUIPrefab;
 
     [Header("Level")]
     public float LevelWidth;
     public float LevelLength;
     public LevelData[] LevelData;
+
+    [Header("Obstacles")]
+    public PhysicsInteractor WaterPrefab;
+    
+    [Header("Particles")]
+    public Particle WaterSplashPrefab;
 
     [Header("Physics layers")]
     public LayerMask PlayerLayer;

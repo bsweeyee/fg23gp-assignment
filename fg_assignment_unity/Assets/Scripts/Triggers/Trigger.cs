@@ -7,11 +7,12 @@ using UnityEngine.Events;
 namespace Lander {
     public abstract class BoxTrigger : MonoBehaviour {
         [SerializeField] private Vector3 size;
-        protected UnityEvent onTrigger;               
+        protected UnityEvent<Collider2D> onTrigger;               
 
-        protected void OnTriggerCheck(LayerMask layer) {
-            if (Physics2D.OverlapBox(transform.position, size, 0, layer)) {
-                onTrigger?.Invoke();
+        public void OnTriggerCheck(LayerMask layer) {
+            var hitCollider = Physics2D.OverlapBox(transform.position, size, 0, layer);
+            if (hitCollider) {
+                onTrigger?.Invoke(hitCollider);
             }
         }
 

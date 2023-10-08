@@ -5,18 +5,24 @@ using UnityEngine;
 
 public class Particle : MonoBehaviour
 {
-    private ParticleSystem ps;
-    private ParticleController controller;
+    protected ParticleSystem ps;
+    protected ParticleController controller;
 
-    public void Initialize(ParticleController controller) {
+    public virtual void Initialize(ParticleController controller) {
         this.controller = controller;
         ps = GetComponent<ParticleSystem>();
         ps.Play();
     }
 
-    public void Tick() {
-        if (ps.isStopped) {
-            controller.DestroySplashParticle(this);
-        }
+    public virtual void Tick() {
+        
+    }
+
+    public void Play() {
+        ps.Play();
+    }
+
+    public void Stop() {
+        ps.Stop();
     }
 }

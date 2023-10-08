@@ -58,6 +58,26 @@ namespace Lander {
             controller.WaterPool.Release(water);
         }
 
+        void OnDestroy() {
+            foreach (var water in waterInteractors) {
+                particleController.DestroyParticle(water.ParticleInstance);
+                water.Physics.Reset();
+                water.ClearEvents();
+                controller.WaterPool.Release(water);                
+            }
+
+            foreach (var water in waterTobeRemoved) {
+                particleController.DestroyParticle(water.ParticleInstance);
+                water.Physics.Reset();
+                water.ClearEvents();
+                controller.WaterPool.Release(water);                
+            }
+
+
+            waterInteractors.Clear();
+            waterTobeRemoved.Clear();        
+        }
+
         #if UNITY_EDITOR
 
         void OnDrawGizmos() {

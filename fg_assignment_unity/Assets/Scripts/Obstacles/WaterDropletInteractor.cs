@@ -7,20 +7,25 @@ namespace Lander {
         [SerializeField] private LayerMask layer;
         [SerializeField] private Vector3 gravity;
         [SerializeField] private float strength = 2000;
-        [SerializeField] private ParticleSystem particle;
+        
+        private SplashParticle particleInstance;
 
         private PhysicsController physics;
-        private WaterSpawner spawner;
 
         public PhysicsController Physics {
             get {
                 return physics;
             }
+        }
+
+        public SplashParticle ParticleInstance {
+            get {
+                return particleInstance;
+            }
         }        
 
         public void Initialize(WaterSpawner spawner, ParticleController particleController) {
             physics = GetComponent<PhysicsController>();
-            this.spawner = spawner; 
             physics.Gravity = gravity;
             physics.Layer = layer;
             base.Initialize(Vector3.zero, spawner.Size, Vector3.zero);
@@ -37,9 +42,9 @@ namespace Lander {
                     pc.AddAcceleration(force * strength);
                 } 
 
-                particleController.CreateSplashParticle(transform.position);                                                                
+                particleInstance = particleController.CreateParticle<SplashParticle>(transform.position) as SplashParticle;                                                                
                 spawner.DestroyWater(this);                
             });
-        }
+        }         
     }
 }

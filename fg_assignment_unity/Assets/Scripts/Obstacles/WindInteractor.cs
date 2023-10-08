@@ -16,17 +16,34 @@ namespace Lander {
         private float activeTimer;
 
         private WindSpawner spawner;
+        private WindParticle particleInstance;
+        private ParticleController pc;
+
+        public WindParticle ParticleInstance {
+            get {
+                return particleInstance;
+            }
+        }
 
         public void Initialize(WindSpawner spawner, ParticleController pc) {
             base.Initialize(spawner.Offset, spawner.Size, spawner.Angle);
             this.spawner = spawner;
             this.activeInterval = spawner.WindActiveInterval;
-            onTrigger.AddListener(OnApplyWind);            
+            onTrigger.AddListener(OnApplyWind);
+            if (particleInstance == null) {
+                particleInstance = pc.CreateParticle<WindParticle>(spawner.transform.position) as WindParticle;                        
+            } else {
+                particleInstance.Play();
+            }
+            particleInstance.transform.up = Quaternion.Euler(angle) * Vector3.up;
+            this.pc = pc;
         }
         
         public void Tick(float dt) {
             activeTimer += dt;
             if (activeTimer > activeInterval) {
+                // pc.DestroyParticle(particle);
+                particleInstance.Stop();                
                 spawner.DestroyWind(this);
                 activeTimer = 0;
                 hit = null;

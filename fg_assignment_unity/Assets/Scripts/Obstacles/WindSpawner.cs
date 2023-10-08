@@ -1,6 +1,7 @@
 using Lander;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class WindSpawner : MonoBehaviour
@@ -74,6 +75,23 @@ public class WindSpawner : MonoBehaviour
         wind.ClearEvents();                    
         windTobeRemoved.Add(wind);
         interactorController.WindPool.Release(wind);
+    }
+
+    void OnDestroy() {
+        foreach(var wind in windInteractors) {
+            wind.ClearEvents();
+            particleController.DestroyParticle(wind.ParticleInstance);
+            interactorController.WindPool.Release(wind);
+        }
+
+        foreach(var wind in windTobeRemoved) {
+            wind.ClearEvents();
+            particleController.DestroyParticle(wind.ParticleInstance);
+            interactorController.WindPool.Release(wind);
+        }
+
+        windInteractors.Clear();
+        windTobeRemoved.Clear();
     }
 
     #if UNITY_EDITOR

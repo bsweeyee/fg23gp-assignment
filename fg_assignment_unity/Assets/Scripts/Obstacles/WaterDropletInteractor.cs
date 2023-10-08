@@ -28,8 +28,9 @@ namespace Lander {
             physics = GetComponent<PhysicsController>();
             physics.Gravity = gravity;
             physics.Layer = layer;
-            base.Initialize(Vector3.zero, spawner.Size, Vector3.zero);
-            onEnterTrigger.AddListener( (Collider2D collider, float dt) => {
+            base.Initialize();
+            size = spawner.Size;
+            onTrigger.AddListener( (Collider2D collider, float dt) => {
                 var pc = collider.GetComponent<PhysicsController>();                
                 if (pc != null) {
                     var pDirection = pc.CurrentVelocity.normalized;

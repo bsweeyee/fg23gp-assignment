@@ -25,7 +25,7 @@ namespace Lander {
         }       
 
         public void OnEnter(Game game, IBaseGameState previous) {                        
-            Initialize(Vector3.zero, Vector3.zero, Vector3.zero);
+            Initialize();
             onEnterTrigger.AddListener( (Collider2D collider, float dt) => {
                 game.CurrentState = Game.LEVEL_COMPLETE_STATE;
             });            

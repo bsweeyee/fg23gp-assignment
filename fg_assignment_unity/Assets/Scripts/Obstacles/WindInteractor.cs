@@ -23,14 +23,23 @@ namespace Lander {
             get {
                 return particleInstance;
             }
+            set {
+                particleInstance = value;
+            }
         }
 
         public void Initialize(WindSpawner spawner, ParticleController pc) {
-            base.Initialize(spawner.Offset, spawner.Size, spawner.Angle);
+            base.Initialize();
+            
+            offset = spawner.Offset;
+            size = spawner.Size;
+            angle = spawner.Angle;
+
             this.spawner = spawner;
             this.activeInterval = spawner.WindActiveInterval;
             onTrigger.AddListener(OnApplyWind);
             if (particleInstance == null) {
+                Debug.Log("here");
                 particleInstance = pc.CreateParticle<WindParticle>(spawner.transform.position) as WindParticle;                        
             } else {
                 particleInstance.Play();

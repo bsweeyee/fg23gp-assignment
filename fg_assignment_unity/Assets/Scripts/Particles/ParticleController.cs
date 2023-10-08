@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Pool;
 
 namespace Lander {
-    public class ParticleController : MonoBehaviour, ILevelPlayEntity
+    public class ParticleController : MonoBehaviour, ILevelPlayEntity, ILevelPauseEntity
     {
         [SerializeField] private int maxPoolSize = 20;
         
@@ -17,7 +17,7 @@ namespace Lander {
         private List<Particle> particleMarkToDestroy;
 
         private IObjectPool<SplashParticle> waterSplashPool;        
-        private IObjectPool<WindParticle> windPool;
+        private IObjectPool<WindParticle> windGustPool;
 
         private IObjectPool<SplashParticle> WaterSplashPool {
             get {
@@ -29,19 +29,23 @@ namespace Lander {
             }
         }
         
-        private IObjectPool<WindParticle> WindPool {
+        private IObjectPool<WindParticle> WindGustPool {
             get {
-                if (windPool == null) {
-                    windPool = new LinkedPool<WindParticle>(OnCreateParticle<WindParticle>, OnTakeParticle<WindParticle>, OnReturnParticle<WindParticle>, OnReturnMaxParticle<WindParticle>, true, maxPoolSize);                    
+                if (windGustPool == null) {
+                    windGustPool = new LinkedPool<WindParticle>(OnCreateParticle<WindParticle>, OnTakeParticle<WindParticle>, OnReturnParticle<WindParticle>, OnReturnMaxParticle<WindParticle>, true, maxPoolSize);                    
                 }
 
-                return windPool;
+                return windGustPool;
             }
         }
 
         public bool IsEarlyInitialized { get; set; }
 
-        public bool IsLateInitialized { get; set; }        
+        public bool IsLateInitialized { get; set; }
+
+        bool IGameInitializeEntity.IsEarlyInitialized => throw new System.NotImplementedException();
+
+        bool IGameInitializeEntity.IsLateInitialized => throw new System.NotImplementedException();
 
         private T OnCreateParticle<T>() {
             var particle = default(T);
@@ -92,7 +96,7 @@ namespace Lander {
                 pp = WaterSplashPool.Get();
             }
             else if (typeof(T) == typeof(WindParticle)) {
-                pp = WindPool.Get();
+                pp = WindGustPool.Get();
             }
 
             if (pp != null) {
@@ -104,8 +108,10 @@ namespace Lander {
             return pp;            
         }
 
-        public void DestroyParticle(Particle pp) {            
-            particleMarkToDestroy.Add(pp);            
+        public void DestroyParticle(Particle pp) { 
+            if (!particleMarkToDestroy.Contains(pp)) {
+                particleMarkToDestroy.Add(pp);            
+            }           
         }       
 
         void ILevelPlayEntity.OnEnter(Game game, IBaseGameState previous) {
@@ -129,7 +135,7 @@ namespace Lander {
                 if (splash != null) {
                     WaterSplashPool.Release(splash);
                 } else if (wind != null) {
-                    WindPool.Release(wind);
+                    WindGustPool.Release(wind);
                 } else {
                     Debug.LogError("Missing particle type");
                 }                                    
@@ -138,6 +144,24 @@ namespace Lander {
         }
 
         void ILevelPlayEntity.OnFixedTick(Game game, float dt) {
-        }        
+        }
+
+        void ILevelPauseEntity.OnEnter(Game game, IBaseGameState previous) {
+            foreach(var instance in particleInstances) {
+                instance.Pause();
+            }
+        }
+
+        void ILevelPauseEntity.OnExit(Game game, IBaseGameState current) {
+            foreach(var instance in particleInstances) {
+                instance.Play();
+            }
+        }
+
+        void ILevelPauseEntity.OnTick(Game game, float dt) {
+        }
+
+        void ILevelPauseEntity.OnFixedTick(Game game, float dt) {
+        }
     }
 }

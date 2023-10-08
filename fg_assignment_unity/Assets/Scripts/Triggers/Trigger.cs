@@ -14,14 +14,10 @@ namespace Lander {
         protected UnityEvent<Collider2D, float> onLeaveTrigger;
         protected Collider2D hit;               
 
-        public void Initialize(Vector3 offset, Vector3 size, Vector3 angle) {
+        public void Initialize() {
             onEnterTrigger = new UnityEvent<Collider2D, float>();
             onTrigger = new UnityEvent<Collider2D, float>();
-            onLeaveTrigger = new UnityEvent<Collider2D, float>();
-
-            if (offset.magnitude != 0) this.offset = offset;
-            if (size.magnitude != 0) this.size = size;
-            if (angle.magnitude != 0) this.angle = angle; 
+            onLeaveTrigger = new UnityEvent<Collider2D, float>();             
         }
 
         public void ClearEvents() {

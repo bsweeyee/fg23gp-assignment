@@ -112,6 +112,8 @@ namespace Lander {
         }        
 
         void ILevelPlayEntity.OnEnter(Game game, IBaseGameState previous) {
+            if (previous.GetType() == typeof(PauseState)) return;
+            
             waterSpawners = FindObjectsOfType<WaterSpawner>().ToArray();                                
             foreach(var spawner in waterSpawners) {
                 spawner.Initialize(this, game.ParticleController);

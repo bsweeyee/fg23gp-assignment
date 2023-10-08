@@ -25,4 +25,8 @@ public class Particle : MonoBehaviour
     public void Stop() {
         ps.Stop();
     }
+
+    public void Pause() {
+        ps.Pause();
+    }
 }

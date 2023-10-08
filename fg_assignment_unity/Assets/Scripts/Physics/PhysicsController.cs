@@ -46,6 +46,9 @@ namespace Lander {
                 get {
                     return currentVelocity;
                 }
+                set {
+                    currentVelocity = value;
+                }                
             }           
 
             public Vector3 Input {                

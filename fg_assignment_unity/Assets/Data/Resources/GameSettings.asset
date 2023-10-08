@@ -42,7 +42,9 @@ MonoBehaviour:
     - {fileID: 3696037016774464735, guid: 6474352a9cf87d44597ab278af273349, type: 3}
     - {fileID: 992902075221314768, guid: 88a89cad3a680014496c9999d815ea28, type: 3}
   WaterPrefab: {fileID: 1115785917900211646, guid: b70b31dafefe393438978ee4ddc629a2, type: 3}
+  WindPrefab: {fileID: 1509481720015734633, guid: 95dfa9a327bc8c542935020adf962305, type: 3}
   WaterSplashPrefab: {fileID: -6668429297020535592, guid: 2279179e409686841b38fde9111c5ad3, type: 3}
+  WindGustPrefab: {fileID: 0}
   PlayerLayer:
     serializedVersion: 2
     m_Bits: 64

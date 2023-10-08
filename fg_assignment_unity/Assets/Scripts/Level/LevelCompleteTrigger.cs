@@ -24,9 +24,9 @@ namespace Lander {
             IsLateInitialized = true;
         }       
 
-        public void OnEnter(Game game, IBaseGameState previous) {            
-            onTrigger = new UnityEvent<Collider2D>();
-            onTrigger.AddListener( (Collider2D collider) => {
+        public void OnEnter(Game game, IBaseGameState previous) {                        
+            Initialize(Vector3.zero, Vector3.zero, Vector3.zero);
+            onEnterTrigger.AddListener( (Collider2D collider, float dt) => {
                 game.CurrentState = Game.LEVEL_COMPLETE_STATE;
             });            
         }
@@ -38,7 +38,7 @@ namespace Lander {
         }
 
         public void OnTick(Game game, float dt) {
-            OnTriggerCheck(game.GameSettings.TriggerLayer);
+            OnTriggerCheck(game.GameSettings.TriggerLayer, dt);
         }
     }
 }

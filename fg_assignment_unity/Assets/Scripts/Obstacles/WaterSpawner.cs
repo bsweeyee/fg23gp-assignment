@@ -8,19 +8,24 @@ namespace Lander {
     {
         [SerializeField] private LayerMask layer;
         [SerializeField] private float spawnInterval = 1;
+        [SerializeField] private Vector3 size;
 
-        PhysicsInteractorController controller;
+        InteractorController controller;
         ParticleController particleController;
         float spawnTimer;        
         
-        List<PhysicsInteractor> waterInteractors;
-        List<PhysicsInteractor> waterTobeRemoved;
+        List<WaterDropletInteractor> waterInteractors;
+        List<WaterDropletInteractor> waterTobeRemoved;
 
-        public void Initialize(PhysicsInteractorController controller, ParticleController particleController) {
+        public Vector3 Size {
+            get { return size; }
+        }
+
+        public void Initialize(InteractorController controller, ParticleController particleController) {
             this.controller = controller;
             this.particleController = particleController;
-            waterInteractors = new List<PhysicsInteractor>();
-            waterTobeRemoved = new List<PhysicsInteractor>();
+            waterInteractors = new List<WaterDropletInteractor>();
+            waterTobeRemoved = new List<WaterDropletInteractor>();
         }
 
         public void Tick(Game game, float dt) {
@@ -30,7 +35,7 @@ namespace Lander {
                 spawnTimer = 0;
             }
             foreach(var interactor in waterInteractors) {
-                interactor.OnTriggerCheck(layer);                
+                interactor.OnTriggerCheck(layer, dt);                
             }
 
             foreach(var r in waterTobeRemoved) {
@@ -46,8 +51,9 @@ namespace Lander {
             waterInteractor.Initialize(this, particleController);
         }
 
-        public void DestroyWater(PhysicsInteractor water) {            
+        public void DestroyWater(WaterDropletInteractor water) {            
             water.Physics.Reset();
+            water.ClearEvents();
             waterTobeRemoved.Add(water);
             controller.WaterPool.Release(water);
         }

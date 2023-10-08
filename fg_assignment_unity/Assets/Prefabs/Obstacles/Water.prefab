@@ -205,7 +205,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74493613f9bb7e94ebd6a78090c74fbf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  size: {x: 0.5, y: 0.5, z: 0}
+  offset: {x: 0, y: 0, z: 0}
+  size: {x: 0, y: 0, z: 0}
+  angle: {x: 0, y: 0, z: 0}
   layer:
     serializedVersion: 2
     m_Bits: 192

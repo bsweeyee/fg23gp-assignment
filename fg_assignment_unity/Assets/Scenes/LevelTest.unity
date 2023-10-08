@@ -237,6 +237,63 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 881074b9109d8ae49a688a4ebac36394, type: 3}
+--- !u!1001 &1678764814
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 185334828729988676, guid: c90e52267c941a041b72ef6f45bf2a12, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 185334828729988676, guid: c90e52267c941a041b72ef6f45bf2a12, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 185334828729988676, guid: c90e52267c941a041b72ef6f45bf2a12, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 185334828729988676, guid: c90e52267c941a041b72ef6f45bf2a12, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 185334828729988676, guid: c90e52267c941a041b72ef6f45bf2a12, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 185334828729988676, guid: c90e52267c941a041b72ef6f45bf2a12, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 185334828729988676, guid: c90e52267c941a041b72ef6f45bf2a12, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 185334828729988676, guid: c90e52267c941a041b72ef6f45bf2a12, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 185334828729988676, guid: c90e52267c941a041b72ef6f45bf2a12, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 185334828729988676, guid: c90e52267c941a041b72ef6f45bf2a12, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3564045086627314115, guid: c90e52267c941a041b72ef6f45bf2a12, type: 3}
+      propertyPath: m_Name
+      value: WaterSpawner
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: c90e52267c941a041b72ef6f45bf2a12, type: 3}
 --- !u!1001 &1767427128
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -537,3 +594,4 @@ SceneRoots:
   - {fileID: 1767427128}
   - {fileID: 8522669490052484731}
   - {fileID: 1633709264}
+  - {fileID: 1678764814}

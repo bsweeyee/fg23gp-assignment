@@ -27,7 +27,7 @@ namespace Lander {
         private InputController inputController;
         private LevelController levelController;
         private CameraController cameraController;
-        private PhysicsInteractorController physicsInteractorController;
+        private InteractorController physicsInteractorController;
         private ParticleController particleController;
         private Player player;
         private Physics.IPhysics[] physics;
@@ -105,7 +105,7 @@ namespace Lander {
             inputController = FindObjectOfType<InputController>(true);
             levelController = FindObjectOfType<LevelController>(true);
             cameraController = FindObjectOfType<CameraController>(true);
-            physicsInteractorController = FindObjectOfType<PhysicsInteractorController>(true);
+            physicsInteractorController = FindObjectOfType<InteractorController>(true);
             particleController = FindObjectOfType<ParticleController>(true);
             player = FindObjectOfType<Player>(true);
 

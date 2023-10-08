@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 namespace Lander {
-    public class PhysicsInteractor : BoxTrigger {
+    public class WaterDropletInteractor : BoxTrigger {
         [SerializeField] private LayerMask layer;
         [SerializeField] private Vector3 gravity;
         [SerializeField] private float strength = 2000;
@@ -23,8 +23,8 @@ namespace Lander {
             this.spawner = spawner; 
             physics.Gravity = gravity;
             physics.Layer = layer;
-            onTrigger = new UnityEvent<Collider2D>();
-            onTrigger.AddListener( (Collider2D collider) => {
+            base.Initialize(Vector3.zero, spawner.Size, Vector3.zero);
+            onEnterTrigger.AddListener( (Collider2D collider, float dt) => {
                 var pc = collider.GetComponent<PhysicsController>();                
                 if (pc != null) {
                     var pDirection = pc.CurrentVelocity.normalized;

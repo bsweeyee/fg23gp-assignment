@@ -173,5 +173,33 @@ namespace Lander {
                 }
             }
         }
+
+        public class LevelTitleState : BaseGameState {
+            public override void OnEnter(Game game, IBaseGameState previous) {
+                entities = GameObject.FindObjectsOfType<MonoBehaviour>(true).OfType<ILevelTitleEntity>().ToArray();
+                foreach(var obs in entities) {
+                    var o = obs as ILevelTitleEntity;
+                    o.OnEnter(game, previous);
+                }
+            }            
+            public override void OnExit(Game game, IBaseGameState current) {
+                foreach(var obs in entities) {
+                    var o = obs as ILevelTitleEntity;
+                    o.OnExit(game, current);
+                }
+            }            
+            public override void OnTick(Game game, float dt) {
+                foreach(var obs in entities) {
+                    var o = obs as ILevelTitleEntity;
+                    o.OnTick(game, dt);
+                }
+            }
+            public override void OnFixedTick(Game game, float dt) {
+                foreach(var obs in entities) {
+                    var o = obs as ILevelTitleEntity;
+                    o.OnFixedTick(game, dt);
+                }
+            }
+        }
     }
 }

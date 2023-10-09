@@ -19,6 +19,7 @@ public class GameSettings : ScriptableObject {
     public PauseUI PauseUIPrefab;
     public LevelCompleteUI LevelCompleteUIPrefab;
     public LevelEndUI LevelEndUIPrefab;
+    public TitleUI TitleUIPrefab;
 
     [Header("Level")]
     public float LevelWidth;

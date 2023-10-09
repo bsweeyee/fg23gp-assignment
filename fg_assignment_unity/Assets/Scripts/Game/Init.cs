@@ -23,6 +23,7 @@ public class Init : MonoBehaviour
             var pauseUI = Instantiate(gameSettings.PauseUIPrefab);
             var levelCompletUI = Instantiate(gameSettings.LevelCompleteUIPrefab);
             var levelEndUI = Instantiate(gameSettings.LevelEndUIPrefab);
+            var titleUI = Instantiate(gameSettings.TitleUIPrefab);
         }
 
         game.Initialize(gameSettings);

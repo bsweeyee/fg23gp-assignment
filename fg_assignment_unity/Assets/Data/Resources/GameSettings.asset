@@ -22,6 +22,7 @@ MonoBehaviour:
   PauseUIPrefab: {fileID: 6260224782049977248, guid: 197b911f0dc59bf47a91a0578d961588, type: 3}
   LevelCompleteUIPrefab: {fileID: 8369769829478865728, guid: 42e29101a7aa8fd4db3cdbab27a1a3e5, type: 3}
   LevelEndUIPrefab: {fileID: 5209043537801840523, guid: da47a4b17104c8548b19af02d7890c6e, type: 3}
+  TitleUIPrefab: {fileID: 8672167064811247482, guid: 4712cef353d237e409d8d499438d0f04, type: 3}
   LevelWidth: 14
   LevelLength: 24
   LevelData:
@@ -31,7 +32,6 @@ MonoBehaviour:
     LevelBlocks:
     - {fileID: 8775904217813142000, guid: e4d4cccc49e5f9e4aa6e833b4b6498be, type: 3}
     - {fileID: 992902075221314768, guid: 1b560fb0efba2cf4e8b27411bb6dd0dd, type: 3}
-    - {fileID: 3696037016774464735, guid: 6474352a9cf87d44597ab278af273349, type: 3}
     - {fileID: 8040376584949530416, guid: d5263b6571e9429408dbebb5c704f5f3, type: 3}
   - LevelID: 1
     StartBlock: {fileID: 551154707699771696, guid: 881074b9109d8ae49a688a4ebac36394, type: 3}

@@ -17,6 +17,7 @@ namespace Lander {
         public static GameState.PauseState PAUSE_STATE;
         public static LevelCompleteState LEVEL_COMPLETE_STATE;
         public static LevelEndState LEVEL_END_STATE;
+        public static LevelTitleState LEVEL_TITLE_STATE;
 
         public static Game instance;
 
@@ -66,6 +67,12 @@ namespace Lander {
                 if (currentState != null) {
                     currentState.OnEnter(this, previousState);
                 }
+            }
+        }
+
+        public LevelController LevelController {
+            get {
+                return levelController;
             }
         }
 
@@ -124,7 +131,8 @@ namespace Lander {
             PLAY_STATE = new PlayState();
             PAUSE_STATE = new GameState.PauseState();
             LEVEL_COMPLETE_STATE = new LevelCompleteState();
-            LEVEL_END_STATE = new LevelEndState();            
+            LEVEL_END_STATE = new LevelEndState(); 
+            LEVEL_TITLE_STATE = new LevelTitleState();           
 
             // we have to run initialize here for all other entities that are not part of the state
             foreach(var e in baseEntities) {

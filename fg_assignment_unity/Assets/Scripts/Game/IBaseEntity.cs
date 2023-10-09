@@ -49,4 +49,11 @@ namespace Lander {
         public void OnTick(Game game, float dt);
         public void OnFixedTick(Game game, float dt);  
     }
+
+    public interface ILevelTitleEntity : IGameInitializeEntity {
+        public void OnEnter(Game game, GameState.IBaseGameState previous);
+        public void OnExit(Game game, GameState.IBaseGameState current);
+        public void OnTick(Game game, float dt);
+        public void OnFixedTick(Game game, float dt); 
+    }
 }

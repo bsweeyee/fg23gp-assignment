@@ -20,7 +20,13 @@ namespace Lander {
         private LevelData current;
 
         private List<GameObject> levelInstances; 
-        private int currentLevel = 0;               
+        private int currentLevel = 0;
+
+        public int CurrentLevel {
+            set {
+                currentLevel = value;
+            }
+        }               
 
         public void EarlyInitialize(Game game) {
             if (IsEarlyInitialized) return;

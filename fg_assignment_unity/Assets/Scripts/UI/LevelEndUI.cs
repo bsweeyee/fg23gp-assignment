@@ -18,16 +18,18 @@ public class LevelEndUI : MonoBehaviour, ILevelEndEntity {
     private Image fadeImage;
     private Canvas canvas;
 
-    void IGameInitializeEntity.EarlyInitialize(Game game) {
+    public void EarlyInitialize(Game game) {
         if (IsEarlyInitialized) return;
 
         fadeImage = transform.Find("Image").GetComponent<Image>();
-        canvas = GetComponent<Canvas>();            
+        canvas = GetComponent<Canvas>();
+
+        gameObject.SetActive(false);            
 
         IsEarlyInitialized = true;
     }
 
-    void IGameInitializeEntity.LateInitialize(Game game) {
+    public void LateInitialize(Game game) {
         if (IsLateInitialized) return;
 
         canvas.renderMode = RenderMode.ScreenSpaceCamera;
@@ -37,9 +39,13 @@ public class LevelEndUI : MonoBehaviour, ILevelEndEntity {
     }
 
     void ILevelEndEntity.OnEnter(Game game, IBaseGameState previous) {        
+        gameObject.SetActive(true);        
+        fadeImage.color = new Color(fadeColor.r,fadeColor.g,fadeColor.b,0);
+        normalizedFade = 0;
     }
 
     void ILevelEndEntity.OnExit(Game game, IBaseGameState current) {
+        gameObject.SetActive(false);        
     }
 
     void ILevelEndEntity.OnFixedTick(Game game, float dt) {
@@ -52,7 +58,7 @@ public class LevelEndUI : MonoBehaviour, ILevelEndEntity {
         // game.PhysicsTickFactor = Mathf.Clamp01(1 - (nf * 1.1f));        
 
         if (normalizedFade >= 1) {
-            // go to main menu
+            game.CurrentState = Game.LEVEL_TITLE_STATE;
         }
     }
 }

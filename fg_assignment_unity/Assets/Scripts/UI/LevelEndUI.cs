@@ -49,7 +49,7 @@ public class LevelEndUI : MonoBehaviour, ILevelEndEntity {
         normalizedFade += dt * fadeSpeed;
         var nf = fade.Evaluate(normalizedFade);
         fadeImage.color = new Color(fadeColor.r,fadeColor.g,fadeColor.b,nf);
-        game.PhysicsTickFactor = Mathf.Clamp01(1 - (nf * 1.1f));        
+        // game.PhysicsTickFactor = Mathf.Clamp01(1 - (nf * 1.1f));        
 
         if (normalizedFade >= 1) {
             // go to main menu

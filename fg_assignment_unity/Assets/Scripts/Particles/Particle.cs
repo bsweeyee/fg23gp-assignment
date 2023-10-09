@@ -15,7 +15,9 @@ public class Particle : MonoBehaviour
     }
 
     public virtual void Tick() {
-        
+        if (ps.isStopped && !ps.IsAlive()) {
+            controller.DestroyParticle(this);
+        }
     }
 
     public void Play() {

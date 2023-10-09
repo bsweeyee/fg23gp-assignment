@@ -12,6 +12,7 @@ public class WindSpawner : MonoBehaviour
     [SerializeField] protected Vector3 offset;
     [SerializeField] protected Vector3 size;
     [SerializeField] private Vector3 angle = Vector3.zero;
+    [SerializeField] private float strength;
 
 
     List<WindInteractor> windInteractors;
@@ -38,6 +39,10 @@ public class WindSpawner : MonoBehaviour
         get { return angle; }
     }
 
+    public float Strength {
+        get { return strength; }
+    }
+
     public void Initialize(InteractorController controller, ParticleController particleController) {
         this.interactorController = controller;
         this.particleController = particleController;
@@ -56,11 +61,15 @@ public class WindSpawner : MonoBehaviour
         windTobeRemoved.Clear();
 
         if (windInteractors.Count < 1) {
-            inactiveTimer += dt;
-            if (inactiveTimer > windInactiveInterval) {
+            if (windInactiveInterval < 0) {
                 CreateWind();
-                inactiveTimer = 0;                
-            }
+            } else {
+                inactiveTimer += dt;
+                if (inactiveTimer > windInactiveInterval) {
+                    CreateWind();
+                    inactiveTimer = 0;                
+                }
+            }         
         }
     }
 
@@ -74,7 +83,9 @@ public class WindSpawner : MonoBehaviour
     public void DestroyWind(WindInteractor wind) {
         wind.ClearEvents();                    
         windTobeRemoved.Add(wind);
-        interactorController.WindPool.Release(wind);
+        if (wind.gameObject.activeSelf) {
+            interactorController.WindPool.Release(wind);
+        }
     }    
 
     #if UNITY_EDITOR

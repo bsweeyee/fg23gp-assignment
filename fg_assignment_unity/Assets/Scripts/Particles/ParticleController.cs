@@ -177,6 +177,8 @@ namespace Lander {
                     Debug.LogError("Missing particle type");
                 }                                    
             }
+            particleInstances.Clear();
+            particleMarkToDestroy.Clear();
         }
 
         void ILevelCompleteEntity.OnExit(Game game, IBaseGameState current) {
@@ -200,6 +202,8 @@ namespace Lander {
                     Debug.LogError("Missing particle type");
                 }                                    
             }
+            particleInstances.Clear();
+            particleMarkToDestroy.Clear();
         }
 
         void ILevelEndEntity.OnExit(Game game, IBaseGameState current) {

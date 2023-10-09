@@ -711,6 +711,7 @@ MonoBehaviour:
   energyBoostReductionRate: 25
   energyFlightReductionRate: 70
   energyRecoveryRate: 99
+  minimumDeathDirection: 0.7
   speedDeathThreshold: 17
   deathAnimationTime: 0.5
   deathTriggerWaitFrames: 30

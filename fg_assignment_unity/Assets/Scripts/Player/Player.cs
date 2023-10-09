@@ -8,7 +8,7 @@ using UnityEngine.UI;
 using UnityEngine.Video;
 
 namespace Lander {
-    public class Player : MonoBehaviour, ILevelStartEntity, ILevelPlayEntity, IInput, IDebug {
+    public class Player : MonoBehaviour, ILevelStartEntity, ILevelPlayEntity, ILevelEndEntity, IInput, IDebug {
         public enum EPlayerState {
             NONE,
             ALIVE,
@@ -46,6 +46,7 @@ namespace Lander {
         [SerializeField] private float energyRecoveryRate;
 
         [Header("Death")]
+        [SerializeField][Range(0, 1)] private float minimumDeathDirection;
         [SerializeField] private float speedDeathThreshold;
         [SerializeField] private float deathAnimationTime = 1;
         [SerializeField] private int deathTriggerWaitFrames = 30;
@@ -199,6 +200,22 @@ namespace Lander {
         void ILevelStartEntity.OnFixedTick(Game game, float dt) {
         }
 
+        void ILevelEndEntity.OnEnter(Game game, IBaseGameState previous) {
+            physics.Gravity = Vector3.zero;
+        }
+
+        void ILevelEndEntity.OnExit(Game game, IBaseGameState current) {
+            
+        }
+
+        void ILevelEndEntity.OnTick(Game game, float dt) {
+            
+        }
+
+        void ILevelEndEntity.OnFixedTick(Game game, float dt) {
+            
+        }
+
         private void FixedTickAlive(Game game, float dt) {
             if (currentEnergyLevel <= 0) {
                 physics.Input = Vector3.zero;
@@ -260,7 +277,7 @@ namespace Lander {
 
             // death check
             if (obstacleHit != null) {
-                if (deathFrameCooldown <= 0 && physics.CurrentVelocity.magnitude > speedDeathThreshold) {
+                if (deathFrameCooldown <= 0 && Mathf.Abs(Vector3.Dot(physics.CurrentVelocity.normalized, Vector3.right)) < minimumDeathDirection && physics.CurrentVelocity.magnitude > speedDeathThreshold) {
                     // player animation, return to checkpoint
                     CurrentPlayerState = EPlayerState.DEAD;
                     return;
@@ -412,6 +429,17 @@ namespace Lander {
 
             Gizmos.color = Color.grey;
             Gizmos.DrawLine(transform.position, transform.position + ( boostDirection.normalized * 0.5f ));
+            
+            Gizmos.color = Color.red;
+            var dQ1 = Vector3.Lerp(Vector3.up, Vector3.right, minimumDeathDirection);
+            var dQ2 = Vector3.Lerp(Vector3.up, -Vector3.right, minimumDeathDirection);
+            var dQ3 = Vector3.Lerp(-Vector3.up, Vector3.right, minimumDeathDirection);
+            var dQ4 = Vector3.Lerp(-Vector3.up, -Vector3.right, minimumDeathDirection);
+
+            Gizmos.DrawLine(transform.position, transform.position + ( dQ1.normalized * 0.75f ));
+            Gizmos.DrawLine(transform.position, transform.position + ( dQ2.normalized * 0.75f ));
+            Gizmos.DrawLine(transform.position, transform.position + ( dQ3.normalized * 0.75f ));
+            Gizmos.DrawLine(transform.position, transform.position + ( dQ4.normalized * 0.75f ));
         }
 
         public void OnDrawGUI() {
@@ -422,7 +450,7 @@ namespace Lander {
             string energy = $"energy level: {currentEnergyLevel}";
 
             GUILayout.Label(energy);
-        }
+        }               
 #endif
     }
 }

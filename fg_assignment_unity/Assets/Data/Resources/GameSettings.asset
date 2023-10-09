@@ -40,6 +40,13 @@ MonoBehaviour:
     - {fileID: 992902075221314768, guid: 88a89cad3a680014496c9999d815ea28, type: 3}
     - {fileID: 5004084088609313435, guid: 324da6ad246a44948bad5af0b27da575, type: 3}
     - {fileID: 2268628748373506699, guid: e58d55ec327d3b544839696e48264034, type: 3}
+  - LevelID: 2
+    StartBlock: {fileID: 455826999018994359, guid: 49d5bb2ea3c9e7c48ac87800d58ead3e, type: 3}
+    EndBlock: {fileID: 6974285531845472063, guid: ab1bc48040eb9ad44b6a4f6c70ee4761, type: 3}
+    LevelBlocks:
+    - {fileID: 6440357993925956355, guid: 97f776eb93d61374cba115003e04ed36, type: 3}
+    - {fileID: 7176694324912722856, guid: 81a88a99c14b5ed4e9a969d4ad77dbfc, type: 3}
+    - {fileID: 3628681442052876116, guid: 70f782e1dae86ad4aaf9ceca2cd342a0, type: 3}
   WaterPrefab: {fileID: 1115785917900211646, guid: b70b31dafefe393438978ee4ddc629a2, type: 3}
   WindPrefab: {fileID: 1509481720015734633, guid: 95dfa9a327bc8c542935020adf962305, type: 3}
   WaterSplashPrefab: {fileID: 5354043636847578334, guid: 2279179e409686841b38fde9111c5ad3, type: 3}

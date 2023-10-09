@@ -139,7 +139,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  fadeSpeed: 0.5
+  fadeSpeed: 0.25
   fadeColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &5760960962115514679
 GameObject:

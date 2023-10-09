@@ -191,7 +191,7 @@ namespace Lander {
 
                 var newVelocity = Vector3.zero;
 
-                if ( Mathf.Abs(vx) <= 0.01f) { vx = 0; } 
+                if ( Mathf.Abs(vx) <= 0.01f) { vx = 0; }
                                 
                 var heightDiff = size.y / (numOfCasts-1);    
                 var widthDiff = size.x / (numOfCasts-1);                                                           
@@ -211,7 +211,7 @@ namespace Lander {
                 if (isHit2DX) {
                     currentRaycastSkinWidth.x = hitX.distance;
                     transform.position += new Vector3(xSign * (currentRaycastSkinWidth.x + (xSign * hitX.normal.x * 0.1f)), 0, 0);                    
-                    vx = 0;
+                    vx = 0;                    
                 }
                 else {
                     currentRaycastSkinWidth.x = raycastSkinWidth;
@@ -219,7 +219,7 @@ namespace Lander {
 
                 
                 if (isHit2DY) {                    
-                    currentRaycastSkinWidth.y = hitY.distance;
+                    currentRaycastSkinWidth.y = hitY.distance;                    
                     if (hitY.distance - (ySign * vy) < 0) {
                         if (ySign < 0) {
                             vx = 0;

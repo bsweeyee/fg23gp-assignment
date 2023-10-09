@@ -55,7 +55,9 @@ namespace Lander {
             water.Physics.Reset();
             water.ClearEvents();
             waterTobeRemoved.Add(water);
-            controller.WaterPool.Release(water);
+            if (water.gameObject.activeSelf) {
+                controller.WaterPool.Release(water);
+            }
         }        
 
         #if UNITY_EDITOR

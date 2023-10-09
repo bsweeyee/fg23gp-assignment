@@ -1,8 +1,4 @@
 using Lander.Physics;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Xml;
 using UnityEngine;
 
 namespace Lander {
@@ -16,17 +12,8 @@ namespace Lander {
         private float activeTimer;
 
         private WindSpawner spawner;
-        private WindParticle particleInstance;
         private ParticleController pc;
-
-        public WindParticle ParticleInstance {
-            get {
-                return particleInstance;
-            }
-            set {
-                particleInstance = value;
-            }
-        }
+        private Particle particleInstance;        
 
         public void Initialize(WindSpawner spawner, ParticleController pc) {
             base.Initialize();
@@ -34,31 +21,36 @@ namespace Lander {
             offset = spawner.Offset;
             size = spawner.Size;
             angle = spawner.Angle;
+            strength = spawner.Strength;
 
             this.spawner = spawner;
             this.activeInterval = spawner.WindActiveInterval;
             onTrigger.AddListener(OnApplyWind);
-            if (particleInstance == null) {                
-                particleInstance = pc.CreateParticle<WindParticle>(spawner.transform.position) as WindParticle;                        
-            } else {
-                particleInstance.Play();
-            }
-            particleInstance.transform.up = Quaternion.Euler(angle) * Vector3.up;
+            // if (particleInstance == null) {                                                        
+            //     Debug.Log(GetInstanceID() + ": " + particleInstance.GetInstanceID()); 
+            // } else {
+            //     particleInstance.transform.position = spawner.transform.position;
+            //     particleInstance.Play();
+            // }
+
+            particleInstance = pc.CreateParticle<WindParticle>(spawner.transform.position) as WindParticle;
+            var d = Quaternion.Euler(angle) * Vector3.up;
+            particleInstance.transform.up = d;            
             this.pc = pc;
         }
         
         public void Tick(float dt) {
-            activeTimer += dt;
-            if (activeTimer > activeInterval) {
-                // pc.DestroyParticle(particle);
-                particleInstance.Stop();                
-                spawner.DestroyWind(this);
-                activeTimer = 0;
-                hit = null;
-            }
-            else {
-                OnTriggerCheck(layer, dt);
+            if (activeInterval > 0) {
+                activeTimer += dt;
+                if (activeTimer > activeInterval) {
+                    // pc.DestroyParticle(particle);
+                    particleInstance.Stop();                
+                    spawner.DestroyWind(this);
+                    activeTimer = 0;
+                    hit = null;
+                }                            
             }            
+            OnTriggerCheck(layer, dt);
         }
 
         void OnApplyWind(Collider2D collider, float dt) {
@@ -69,9 +61,8 @@ namespace Lander {
                 var o = Vector3.Dot(diff, d.normalized) * d.normalized;
                 var maxDistance = size.y;
 
-                var s = strength * windDistanceFallOff.Evaluate(o.magnitude / maxDistance);                
-                var direction = Quaternion.Euler(angle) * Vector3.up;
-                pc.CurrentVelocity += direction * s * dt;
+                var s = strength * windDistanceFallOff.Evaluate(o.magnitude / maxDistance);                                
+                pc.CurrentVelocity += d * s * dt;
             }
         }                       
     }

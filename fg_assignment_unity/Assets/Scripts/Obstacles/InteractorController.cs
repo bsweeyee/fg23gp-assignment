@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Pool;
 
 namespace Lander {
-    public class InteractorController : MonoBehaviour, ILevelPlayEntity
+    public class InteractorController : MonoBehaviour, ILevelPlayEntity, ILevelCompleteEntity, ILevelEndEntity
     {   
         [SerializeField] private int maxPoolSize = 20;
 
@@ -43,6 +43,10 @@ namespace Lander {
         public bool IsEarlyInitialized { get; set; }
 
         public bool IsLateInitialized { get; set; }
+
+        bool IGameInitializeEntity.IsEarlyInitialized => throw new System.NotImplementedException();
+
+        bool IGameInitializeEntity.IsLateInitialized => throw new System.NotImplementedException();
 
         public virtual void EarlyInitialize(Game game) {
             if (IsEarlyInitialized) return;
@@ -139,7 +143,59 @@ namespace Lander {
         }
 
         void ILevelPlayEntity.OnFixedTick(Game game, float dt) {
-        }        
+        }
+
+        void ILevelCompleteEntity.OnEnter(Game game, IBaseGameState previous) {
+            var waterInstances = FindObjectsOfType<WaterDropletInteractor>();
+            var windInstances = FindObjectsOfType<WindInteractor>();
+
+            foreach(var wi in waterInstances) {
+                if (wi.gameObject.activeSelf) {
+                    WaterPool.Release(wi);
+                }
+            }
+
+            foreach(var wi in windInstances) {
+                if (wi.gameObject.activeSelf) {
+                    WindPool.Release(wi);
+                }
+            }
+        }
+
+        void ILevelCompleteEntity.OnExit(Game game, IBaseGameState current) {
+        }
+
+        void ILevelCompleteEntity.OnTick(Game game, float dt) {
+        }
+
+        void ILevelCompleteEntity.OnFixedTick(Game game, float dt) {
+        }       
+
+        void ILevelEndEntity.OnEnter(Game game, IBaseGameState previous) {
+            var waterInstances = FindObjectsOfType<WaterDropletInteractor>();
+            var windInstances = FindObjectsOfType<WindInteractor>();
+
+            foreach(var wi in waterInstances) {
+                if (wi.gameObject.activeSelf) {
+                    WaterPool.Release(wi);
+                }
+            }
+
+            foreach(var wi in windInstances) {
+                if (wi.gameObject.activeSelf) {
+                    WindPool.Release(wi);
+                }
+            }
+        }
+
+        void ILevelEndEntity.OnExit(Game game, IBaseGameState current) {
+        }
+
+        void ILevelEndEntity.OnTick(Game game, float dt) {
+        }
+
+        void ILevelEndEntity.OnFixedTick(Game game, float dt) {
+        }
     }
 }
 

@@ -75,28 +75,7 @@ public class WindSpawner : MonoBehaviour
         wind.ClearEvents();                    
         windTobeRemoved.Add(wind);
         interactorController.WindPool.Release(wind);
-    }
-
-    void OnDestroy() {        
-        foreach(var wind in windInteractors) {
-            if (wind == null) continue;
-            wind.ClearEvents();
-            particleController.DestroyParticle(wind.ParticleInstance);
-            wind.ParticleInstance = null;
-            interactorController.WindPool.Release(wind);
-        }
-
-        foreach(var wind in windTobeRemoved) {
-            if (wind == null) continue;
-            wind.ClearEvents();
-            particleController.DestroyParticle(wind.ParticleInstance);
-            wind.ParticleInstance = null;
-            interactorController.WindPool.Release(wind);
-        }
-
-        windInteractors.Clear();
-        windTobeRemoved.Clear();
-    }
+    }    
 
     #if UNITY_EDITOR
 

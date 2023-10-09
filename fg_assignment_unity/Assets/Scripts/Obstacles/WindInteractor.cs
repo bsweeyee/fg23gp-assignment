@@ -38,8 +38,7 @@ namespace Lander {
             this.spawner = spawner;
             this.activeInterval = spawner.WindActiveInterval;
             onTrigger.AddListener(OnApplyWind);
-            if (particleInstance == null) {
-                Debug.Log("here");
+            if (particleInstance == null) {                
                 particleInstance = pc.CreateParticle<WindParticle>(spawner.transform.position) as WindParticle;                        
             } else {
                 particleInstance.Play();
@@ -74,6 +73,6 @@ namespace Lander {
                 var direction = Quaternion.Euler(angle) * Vector3.up;
                 pc.CurrentVelocity += direction * s * dt;
             }
-        }        
+        }                       
     }
 }

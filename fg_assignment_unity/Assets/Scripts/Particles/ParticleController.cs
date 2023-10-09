@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Pool;
 
 namespace Lander {
-    public class ParticleController : MonoBehaviour, ILevelPlayEntity, ILevelPauseEntity
+    public class ParticleController : MonoBehaviour, ILevelPlayEntity, ILevelPauseEntity, ILevelCompleteEntity, ILevelEndEntity
     {
         [SerializeField] private int maxPoolSize = 20;
         
@@ -130,6 +130,7 @@ namespace Lander {
 
             foreach(var ws in particleMarkToDestroy) {
                 particleInstances.Remove(ws);
+                if (!ws.gameObject.activeSelf) continue;
                 var splash = ws as SplashParticle;
                 var wind = ws as WindParticle;
                 if (splash != null) {
@@ -162,6 +163,52 @@ namespace Lander {
         }
 
         void ILevelPauseEntity.OnFixedTick(Game game, float dt) {
+        }
+
+        void ILevelCompleteEntity.OnEnter(Game game, IBaseGameState previous) {
+            foreach(var ws in particleInstances) {
+                var splash = ws as SplashParticle;
+                var wind = ws as WindParticle;
+                if (splash != null) {
+                    WaterSplashPool.Release(splash);
+                } else if (wind != null) {
+                    WindGustPool.Release(wind);
+                } else {
+                    Debug.LogError("Missing particle type");
+                }                                    
+            }
+        }
+
+        void ILevelCompleteEntity.OnExit(Game game, IBaseGameState current) {
+        }
+
+        void ILevelCompleteEntity.OnTick(Game game, float dt) {
+        }
+
+        void ILevelCompleteEntity.OnFixedTick(Game game, float dt) {
+        }
+
+        void ILevelEndEntity.OnEnter(Game game, IBaseGameState previous) {
+            foreach(var ws in particleInstances) {
+                var splash = ws as SplashParticle;
+                var wind = ws as WindParticle;
+                if (splash != null) {
+                    WaterSplashPool.Release(splash);
+                } else if (wind != null) {
+                    WindGustPool.Release(wind);
+                } else {
+                    Debug.LogError("Missing particle type");
+                }                                    
+            }
+        }
+
+        void ILevelEndEntity.OnExit(Game game, IBaseGameState current) {
+        }
+
+        void ILevelEndEntity.OnTick(Game game, float dt) {
+        }
+
+        void ILevelEndEntity.OnFixedTick(Game game, float dt) {
         }
     }
 }

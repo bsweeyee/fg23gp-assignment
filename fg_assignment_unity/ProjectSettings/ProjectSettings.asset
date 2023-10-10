@@ -601,7 +601,7 @@ PlayerSettings:
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    Standalone: DISPLAY_DEBUG_MENU
+    Standalone: 
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend: {}
@@ -633,8 +633,8 @@ PlayerSettings:
   apiCompatibilityLevelPerPlatform: {}
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: fg_assignment_unity
-  metroPackageVersion: 
+  metroPackageName: fgassignmentunity
+  metroPackageVersion: 1.0.0.0
   metroCertificatePath: 
   metroCertificatePassword: 
   metroCertificateSubject: 
@@ -642,7 +642,7 @@ PlayerSettings:
   metroCertificateNotAfter: 0000000000000000
   metroApplicationDescription: fg_assignment_unity
   wsaImages: {}
-  metroTileShortName: 
+  metroTileShortName: kaeru
   metroTileShowName: 0
   metroMediumTileShowName: 0
   metroLargeTileShowName: 0

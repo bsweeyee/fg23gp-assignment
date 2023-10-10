@@ -48,7 +48,7 @@ namespace Lander {
         public void GenerateLevels(LevelData data, float length, float width) {
             var start = data.StartBlock;
             var end = data.EndBlock;
-            var levels = data.LevelBlocks;
+            var levels = data.PlatformBlocks;
 
             var startInstance = Instantiate(start);
             levelInstances.Add(startInstance);
@@ -58,7 +58,7 @@ namespace Lander {
                 levelInstances.Add(levelInstance);
             }
             var endInstance = Instantiate(end);
-            endInstance.transform.position = new Vector3(0, data.LevelBlocks.Length * length, 0);
+            endInstance.transform.position = new Vector3(0, data.PlatformBlocks.Length * length, 0);
             levelInstances.Add(endInstance);
 
             var platformGenerator = startInstance.GetComponentsInChildren<PlatformGenerator>().First(x => x.AxisDirection == PlatformGenerator.EAxisDirection.X);

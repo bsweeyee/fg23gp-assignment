@@ -1,16 +1,16 @@
 # FG23GP Assignment 2
 
 ## Basic info
-Name: Brandon Swee Yee
-Link: https://github.com/bsweeyee/fg23gp-assignment.git
-Unity version: 2022.3.9f1
-Assignment: 2 - ILander game  
+- Name: Brandon Swee Yee  
+- Link: https://github.com/bsweeyee/fg23gp-assignment.git  
+- Unity version: 2022.3.9f1  
+- Assignment: 2 - ILander game  
 
 ## Mechanics and goals
 You control a frog stuck at a bottom of a well.  
-Your goal is to **escape this well by going up**, landing on platforms with a combination of jumping and flying controls  
-You have a **limited amount of energy** to fly and jump so make sure to spend them correctly.  
-**Control your speed**, do not bump onto walls too quickly and make sure to land slowly or you will die!  
+- Your goal is to **escape this well by going up**, landing on platforms with a combination of jumping and flying controls  
+- You have a **limited amount of energy** to fly and jump so make sure to spend them correctly.  
+- **Control your speed**, do not bump onto walls too quickly and make sure to land slowly or you will die!  
 
 ## Game Controls:  
 Press and hold _A_ to fly left  
@@ -84,6 +84,7 @@ Differences between platforms and walls:
 - Create platforms only if they are tiles to be linked in a horizontal direction.
 
 #### Changing Spawn points
+![change_spawn.png](https://github.com/bsweeyee/fg23gp-assignment/blob/main/images/changing_spawn_points.png)
 After the PlatformGenerator script, you will see additional Transform Gizmos appearing.  
 Each set of linked platform is a checkpoint in this game.  
 
@@ -91,6 +92,7 @@ Modify the position where the player will respawn by moving this Transform Gizmo
 
 ### Debugging and Testing
 #### Respawning
+![respawn.png](https://github.com/bsweeyee/fg23gp-assignment/blob/main/images/respawning.png)
 While running the game in the editor, you might want to respawn at a specific point to test out a specifc part of the game.  
 You can do this by tapping on red spheres that appear where you set the respawn points for each platform
 

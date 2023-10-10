@@ -3,6 +3,7 @@ using Lander.GameState;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PauseUI : MonoBehaviour, ILevelPauseEntity, IInput {
     public bool IsEarlyInitialized { get; private set; }
@@ -10,6 +11,8 @@ public class PauseUI : MonoBehaviour, ILevelPauseEntity, IInput {
     public bool IsLateInitialized { get; private set; }
 
     private Game game;
+
+    private Button returnToTitle;
     
     public void EarlyInitialize(Game game) {
         if (IsEarlyInitialized) return;
@@ -17,6 +20,12 @@ public class PauseUI : MonoBehaviour, ILevelPauseEntity, IInput {
         gameObject.SetActive(false);
 
         IsEarlyInitialized = true;
+
+        returnToTitle = transform.Find("ReturnToTitle").GetComponent<Button>();
+
+        returnToTitle.onClick.AddListener( () => {
+            game.CurrentState = Game.LEVEL_TITLE_STATE;
+        });
     }
 
     public void LateInitialize(Game game) {

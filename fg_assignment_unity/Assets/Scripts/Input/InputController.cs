@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Linq;
 using System.Data.Common;
+using Lander.GameState;
 
 namespace Lander {
     [System.Serializable]
@@ -23,7 +24,7 @@ namespace Lander {
         public void Notify(InputData data);
     }
 
-    public class InputController : MonoBehaviour, IGameInitializeEntity
+    public class InputController : MonoBehaviour, ILevelTitleEntity
     {
         private IInput[] inputs;
         private InputData cachedInput;
@@ -90,6 +91,19 @@ namespace Lander {
                 }
                 break;
             }                    
+        }
+
+        void ILevelTitleEntity.OnEnter(Game game, IBaseGameState previous) {
+            cachedInput.Paused = false;
+        }
+
+        void ILevelTitleEntity.OnExit(Game game, IBaseGameState current) {
+        }
+
+        void ILevelTitleEntity.OnTick(Game game, float dt) {
+        }
+
+        void ILevelTitleEntity.OnFixedTick(Game game, float dt) {
         }
     }
 }

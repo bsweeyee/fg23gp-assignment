@@ -27,6 +27,6 @@ public class Init : MonoBehaviour
         }
 
         game.Initialize(gameSettings);
-        game.CurrentState = Game.START_STATE;
+        game.CurrentState = Game.LEVEL_TITLE_STATE;
     }
 }

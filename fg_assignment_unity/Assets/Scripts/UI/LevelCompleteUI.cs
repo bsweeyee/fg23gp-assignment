@@ -24,6 +24,8 @@ namespace Lander {
             image = transform.Find("Image").GetComponent<Image>();
             canvas = GetComponent<Canvas>();
 
+            gameObject.SetActive(false);
+
             IsEarlyInitialized = true;
         }
 

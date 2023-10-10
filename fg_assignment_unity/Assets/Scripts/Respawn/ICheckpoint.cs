@@ -10,9 +10,7 @@ namespace Lander {
         public static Vector3 CurrentSpawnWorldPosition {
             get { return currentSpawnWorldPosition; }
             set {
-                if (value != Vector3.zero) {
-                    currentSpawnWorldPosition = value;
-                }
+                currentSpawnWorldPosition = value;
             }
         }
 

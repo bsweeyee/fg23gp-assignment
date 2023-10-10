@@ -121,10 +121,6 @@ namespace Lander {
 
         public bool IsLateInitialized { get; private set; }
 
-        bool IGameInitializeEntity.IsEarlyInitialized => throw new System.NotImplementedException();
-
-        bool IGameInitializeEntity.IsLateInitialized => throw new System.NotImplementedException();
-
         public void EarlyInitialize(Game game) {
             if (IsEarlyInitialized) return;
 
@@ -273,11 +269,14 @@ namespace Lander {
                     break;
             }
 
-            var obstacleHit = Physics2D.OverlapBox(transform.position, physics.SizeWithCast + Vector3.one * 0.1f, 0, game.GameSettings.ObstacleLayer);
+            var obstacleHit = Physics2D.OverlapBox(transform.position, physics.SizeWithCast, 0, game.GameSettings.ObstacleLayer);
 
             // death check
             if (obstacleHit != null) {
-                if (deathFrameCooldown <= 0 && Mathf.Abs(Vector3.Dot(physics.CurrentVelocity.normalized, Vector3.right)) < minimumDeathDirection && physics.CurrentVelocity.magnitude > speedDeathThreshold) {
+                var isAboveMinimumDeathDirection = Mathf.Abs(Vector3.Dot(physics.CurrentVelocity.normalized, Vector3.right)) < minimumDeathDirection;
+                var isPassSpeedThreshold = physics.CurrentVelocity.magnitude > speedDeathThreshold;
+
+                if (deathFrameCooldown <= 0 && isAboveMinimumDeathDirection && isPassSpeedThreshold) {
                     // player animation, return to checkpoint
                     CurrentPlayerState = EPlayerState.DEAD;
                     return;
@@ -294,7 +293,9 @@ namespace Lander {
                     }
                     var chk = obstacleHit.GetComponent<Checkpoint>();
                     if (chk != null) {
-                        Checkpoint.CurrentSpawnWorldPosition = chk.SpawnWorldPosition;
+                        if (chk.transform.InverseTransformPoint(chk.SpawnWorldPosition) != Vector3.zero) {
+                            Checkpoint.CurrentSpawnWorldPosition = chk.SpawnWorldPosition;
+                        }
                     }
                 }
             }

@@ -105,9 +105,9 @@ MonoBehaviour:
   - LocalSpaceCentre: {x: -6.5, y: 0, z: 0.1}
     Size: {x: 1, y: 24, z: 0.2}
     LocalSpawnPoint: {x: -6.5, y: 0, z: 0.1}
-  - LocalSpaceCentre: {x: 6.5, y: 10.5, z: 0.1}
-    Size: {x: 1, y: 4, z: 0.2}
-    LocalSpawnPoint: {x: 6.5, y: 10.5, z: 0.1}
+  - LocalSpaceCentre: {x: 6.5, y: 0, z: 0.1}
+    Size: {x: 1, y: 24, z: 0.2}
+    LocalSpawnPoint: {x: 6.5, y: 0, z: 0.1}
 --- !u!1 &3125182611315416753
 GameObject:
   m_ObjectHideFlags: 0
@@ -198,6 +198,9 @@ MonoBehaviour:
   - LocalSpaceCentre: {x: 5, y: 6.5, z: 0.1}
     Size: {x: 2, y: 1, z: 0.2}
     LocalSpawnPoint: {x: 5, y: 8.5, z: 0}
+  - LocalSpaceCentre: {x: -2, y: 9.5, z: 0.1}
+    Size: {x: 8, y: 1, z: 0.2}
+    LocalSpawnPoint: {x: -2, y: 11, z: 0}
 --- !u!1 &4206602540671722132
 GameObject:
   m_ObjectHideFlags: 0

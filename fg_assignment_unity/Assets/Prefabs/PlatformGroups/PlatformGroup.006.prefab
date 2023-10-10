@@ -999,9 +999,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   axisDirection: 1
   localSpaceBlocks:
+  - LocalSpaceCentre: {x: -2.5, y: -3.5, z: 0.1}
+    Size: {x: 1, y: 5, z: 0.2}
+    LocalSpawnPoint: {x: -2.5, y: -3.5, z: 0}
+  - LocalSpaceCentre: {x: -1.5, y: -3.5, z: 0.1}
+    Size: {x: 1, y: 5, z: 0.2}
+    LocalSpawnPoint: {x: -1.5, y: -3.5, z: 0}
+  - LocalSpaceCentre: {x: 3.5, y: -3.5, z: 0.1}
+    Size: {x: 1, y: 1, z: 0.2}
+    LocalSpawnPoint: {x: 3.5, y: -3.5, z: 0}
+  - LocalSpaceCentre: {x: 2.5, y: -3, z: 0.1}
+    Size: {x: 1, y: 2, z: 0.2}
+    LocalSpawnPoint: {x: 2.5, y: -3, z: 0}
+  - LocalSpaceCentre: {x: 4.5, y: -3, z: 0.1}
+    Size: {x: 1, y: 2, z: 0.2}
+    LocalSpawnPoint: {x: 4.5, y: -3, z: 0}
   - LocalSpaceCentre: {x: -6.5, y: 0, z: 0.1}
     Size: {x: 1, y: 24, z: 0.2}
-    LocalSpawnPoint: {x: -6.5, y: 0, z: 0.1}
+    LocalSpawnPoint: {x: -6.5, y: 0, z: 0}
+  - LocalSpaceCentre: {x: 6.5, y: 0, z: 0.1}
+    Size: {x: 1, y: 24, z: 0.2}
+    LocalSpawnPoint: {x: 6.5, y: 0, z: 0}
+  - LocalSpaceCentre: {x: 1.5, y: 4.5, z: 0.1}
+    Size: {x: 1, y: 3, z: 0.2}
+    LocalSpawnPoint: {x: 1.5, y: 4.5, z: 0}
+  - LocalSpaceCentre: {x: 2.5, y: 4.5, z: 0.1}
+    Size: {x: 1, y: 3, z: 0.2}
+    LocalSpawnPoint: {x: 2.5, y: 4.5, z: 0}
 --- !u!1 &3467113019324683479
 GameObject:
   m_ObjectHideFlags: 0

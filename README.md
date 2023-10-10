@@ -136,11 +136,11 @@ There are 2 main reasons why I decided to structure the code this way:
 1. I wanted to practice the State Pattern in an OOP way as described by the Game Programming Pattern book by Bob Nystrom
 2. The game was simple enough to be controlled fully by a state machine and it helps me in debugging certain pieces of code.
 
-### Inspirations
+## Inspirations
 - Mechanics Inspiration: https://www.pomelogames.com/mars-mars/
 - Concept inspiration: https://en.wikibooks.org/wiki/Chinese_Stories/The_frog_of_the_well
 
-### References and assets
+## References and assets
 - Collision detection video by Sebastian Lague: https://youtu.be/OBtaLCmJexk?si=kcYwC_1ONQlgj2FS
 - Shader based screen transition by DDRKirby: https://ddrkirby.com/articles/shader-based-transitions/shader-based-transitions.html
 - Chevy Ray's Pixel Fonts by Chevy Ray: https://chevyray.itch.io/pixel-fonts

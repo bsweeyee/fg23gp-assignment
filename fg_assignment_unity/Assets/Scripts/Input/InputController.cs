@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 using System.Linq;
 using System.Data.Common;
 using Lander.GameState;
+using UnityEngine.AI;
 
 namespace Lander {
     [System.Serializable]
@@ -33,6 +34,8 @@ namespace Lander {
 
         public bool IsLateInitialized { get; private set; }
 
+        public Game game;
+
         public void EarlyInitialize(Game game) {
             if (IsEarlyInitialized) return;
 
@@ -41,6 +44,9 @@ namespace Lander {
 
             cachedInput.Movement = Vector2.zero;
             cachedInput.BoostState = InputData.EBoostState.NONE;
+            cachedInput.Paused = false;
+
+            this.game = game;
 
             IsEarlyInitialized = true;
         }
@@ -51,46 +57,52 @@ namespace Lander {
             IsLateInitialized = true;
         }      
 
-        public void OnFly(InputAction.CallbackContext context) {                        
-            var movement = context.ReadValue<Vector2>();
-            cachedInput.Movement = movement;
+        public void OnFly(InputAction.CallbackContext context) { 
+            if (game.CurrentState == Game.PLAY_STATE) {        
+                var movement = context.ReadValue<Vector2>();
+                cachedInput.Movement = movement;
 
-            foreach(var input in inputs) {
-                input.Notify(cachedInput);
+                foreach(var input in inputs) {
+                    input.Notify(cachedInput);
+                }
             }
         }
 
-        public void OnBoost(InputAction.CallbackContext context) {            
-            switch(context.phase) {
-                case InputActionPhase.Performed:
-                case InputActionPhase.Started:                
-                cachedInput.BoostState = InputData.EBoostState.PRESSED;
-                // Debug.Log("started: " + context.ReadValueAsButton());
-                break;                                
-                case InputActionPhase.Canceled:
-                cachedInput.BoostState = InputData.EBoostState.RELEASED;
-                // Debug.Log("canceled: " + context.ReadValueAsButton());                
-                break;
+        public void OnBoost(InputAction.CallbackContext context) {
+            if (game.CurrentState == Game.PLAY_STATE) {
+                switch(context.phase) {
+                    case InputActionPhase.Performed:
+                    case InputActionPhase.Started:                
+                    cachedInput.BoostState = InputData.EBoostState.PRESSED;
+                    // Debug.Log("started: " + context.ReadValueAsButton());
+                    break;                                
+                    case InputActionPhase.Canceled:
+                    cachedInput.BoostState = InputData.EBoostState.RELEASED;
+                    // Debug.Log("canceled: " + context.ReadValueAsButton());                
+                    break;
+                }
+                
+                foreach(var input in inputs) {
+                    input.Notify(cachedInput);
+                }
+                
+                if (cachedInput.BoostState != InputData.EBoostState.PRESSED) cachedInput.BoostState = InputData.EBoostState.NONE;
             }
-            
-            foreach(var input in inputs) {
-                input.Notify(cachedInput);
-            }
-            
-            if (cachedInput.BoostState != InputData.EBoostState.PRESSED) cachedInput.BoostState = InputData.EBoostState.NONE;
         }
 
         public void OnPause(InputAction.CallbackContext context) {
-            switch (context.phase) {
-                case InputActionPhase.Performed:
-                if (context.ReadValueAsButton()) {
-                    cachedInput.Paused = !cachedInput.Paused;
-                    foreach(var input in inputs) {
-                        input.Notify(cachedInput);
+            if (game.CurrentState == Game.PLAY_STATE || game.CurrentState == Game.PAUSE_STATE) {
+                switch (context.phase) {
+                    case InputActionPhase.Performed:
+                    if (context.ReadValueAsButton()) {
+                        cachedInput.Paused = !cachedInput.Paused;
+                        foreach(var input in inputs) {
+                            input.Notify(cachedInput);
+                        }
                     }
-                }
-                break;
-            }                    
+                    break;
+                }                    
+            }
         }
 
         void ILevelTitleEntity.OnEnter(Game game, IBaseGameState previous) {

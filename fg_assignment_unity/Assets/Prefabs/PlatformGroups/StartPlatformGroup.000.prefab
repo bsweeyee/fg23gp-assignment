@@ -384,7 +384,7 @@ MonoBehaviour:
   localSpaceBlocks:
   - LocalSpaceCentre: {x: 0, y: -11.5, z: 0.1}
     Size: {x: 14, y: 1, z: 0.2}
-    LocalSpawnPoint: {x: 0, y: -10, z: 0}
+    LocalSpawnPoint: {x: 3, y: -10, z: 0}
 --- !u!1 &8295340758204671588
 GameObject:
   m_ObjectHideFlags: 0

@@ -388,8 +388,6 @@ namespace Lander {
         }
 
         void IInput.Notify(InputData data) {
-            if (data.Paused || game.CurrentState != Game.PLAY_STATE) return;
-
             if (movement.x != data.Movement.x) controlRate = 0;
 
             if (boostState != InputData.EBoostState.PRESSED) movement = data.Movement;
@@ -442,8 +440,10 @@ namespace Lander {
             Gizmos.DrawLine(transform.position, transform.position + ( dQ3.normalized * 0.75f ));
             Gizmos.DrawLine(transform.position, transform.position + ( dQ4.normalized * 0.75f ));
         }
+#endif
 
         public void OnDrawGUI() {
+#if DISPLAY_DEBUG_MENU
             string vel = $"current velocity: {physics.CurrentVelocity}, {physics.CurrentVelocity.magnitude}";
                 
             GUILayout.Label(vel);   
@@ -451,7 +451,7 @@ namespace Lander {
             string energy = $"energy level: {currentEnergyLevel}";
 
             GUILayout.Label(energy);
-        }               
 #endif
+        }               
     }
 }

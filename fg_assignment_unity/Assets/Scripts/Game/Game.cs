@@ -167,17 +167,16 @@ namespace Lander {
             }
         }
 
-#if UNITY_EDITOR
-        string stateName = "";
         void OnGUI() {            
             if (debugs != null) {
                 foreach (var debug in debugs) {
                     debug.OnDrawGUI();
                 }
             }
-        }
+        }        
 
-        public void OnDrawGUI() {
+    public void OnDrawGUI() {
+#if DISPLAY_DEBUG_MENU
             string currentState = $"current state: {this.currentState.ToString()}";
 
             GUILayout.Label(currentState);
@@ -206,8 +205,8 @@ namespace Lander {
                     CurrentState = LEVEL_END_STATE;
                 }
             }
-        }
 #endif
+        }
     }
 }
 

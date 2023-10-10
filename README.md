@@ -16,7 +16,9 @@ You control a frog stuck at a bottom of a well.
 Press and hold _A_ to fly left  
 Press and hold _D_ to fly right  
 Hold _Space_ to charge jump  
-Release _Space_ to jump  
+Release _Space_ to jump
+Press _ESC_ to pause game
+Interact with UI using the mouse  
 
 ## Additional packages
 - New Unity Input System

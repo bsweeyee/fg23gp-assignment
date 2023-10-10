@@ -1,20 +1,12 @@
-using Lander;
 using Lander.GameState;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace Lander {
-    public class LevelController : MonoBehaviour, ILevelStartEntity, ILevelCompleteEntity, ILevelEndEntity {
+    public class LevelController : MonoBehaviour, ILevelStartEntity, ILevelEndEntity {
         public bool IsEarlyInitialized { get; set; }
         public bool IsLateInitialized { get; set; }
-
-        bool IGameInitializeEntity.IsEarlyInitialized => throw new System.NotImplementedException();
-
-        bool IGameInitializeEntity.IsLateInitialized => throw new System.NotImplementedException();
 
         private LevelData[] data;
         private LevelData current;
@@ -23,6 +15,9 @@ namespace Lander {
         private int currentLevel = 0;
 
         public int CurrentLevel {
+            get {
+                return currentLevel;
+            }
             set {
                 currentLevel = value;
             }
@@ -100,23 +95,8 @@ namespace Lander {
         void ILevelStartEntity.OnFixedTick(Game game, float dt) {
         }
 
-        void ILevelCompleteEntity.OnEnter(Game game, IBaseGameState previous) {
-            currentLevel += 1;
-            if (currentLevel >= game.GameSettings.LevelData.Length) {
-                game.CurrentState = Game.LEVEL_END_STATE;
-            }
-        }
-
-        void ILevelCompleteEntity.OnExit(Game game, IBaseGameState current) {
-        }
-
-        void ILevelCompleteEntity.OnTick(Game game, float dt) {
-        }
-
-        void ILevelCompleteEntity.OnFixedTick(Game game, float dt) {
-        }
-
         void ILevelEndEntity.OnEnter(Game game, IBaseGameState previous) {
+            currentLevel = 0;
         }
 
         void ILevelEndEntity.OnExit(Game game, IBaseGameState current) {
@@ -126,6 +106,6 @@ namespace Lander {
         }
 
         void ILevelEndEntity.OnFixedTick(Game game, float dt) {
-        }        
+        }
     }
 }

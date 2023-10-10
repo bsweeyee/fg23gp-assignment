@@ -16,7 +16,8 @@ public class TitleUI : MonoBehaviour, ILevelTitleEntity, ILevelCompleteEntity {
     private Canvas canvas;
 
     private Image fade;
-    private Button playAgainButton;
+    private Button play;
+    private Button quit;
 
     private float normalizedFadeTransitionRate;
 
@@ -27,16 +28,24 @@ public class TitleUI : MonoBehaviour, ILevelTitleEntity, ILevelCompleteEntity {
         canvas = GetComponent<Canvas>();
 
         fade = transform.Find("Fade").GetComponent<Image>();
-        playAgainButton = transform.Find("PlayAgain").GetComponent<Button>(); 
+        play = transform.Find("Play").GetComponent<Button>();
+        quit = transform.Find("Quit").GetComponent<Button>(); 
 
         fade.color = new Color(fade.color.r, fade.color.g, fade.color.b, 0);            
 
-        playAgainButton.gameObject.SetActive(false);
+        play.gameObject.SetActive(false);
 
-        playAgainButton.onClick.AddListener( () => {
-            game.LevelController.CurrentLevel = -1;
+        play.onClick.AddListener( () => {
             game.CurrentState = Game.LEVEL_COMPLETE_STATE;
         });
+
+        quit.onClick.AddListener(() => {
+            Application.Quit();
+        });
+    
+        #if UNITY_WEBGL
+        quit.gameObject.SetActive(false);
+        #endif
 
         IsEarlyInitialized = true;
     }
@@ -52,9 +61,11 @@ public class TitleUI : MonoBehaviour, ILevelTitleEntity, ILevelCompleteEntity {
 
     void ILevelTitleEntity.OnEnter(Game game, IBaseGameState previous) {
         gameObject.SetActive(true);
+        fade.gameObject.SetActive(true);
         fade.color = new Color(fade.color.r, fade.color.g, fade.color.b, 1);            
         normalizedFadeTransitionRate = 0;
-        playAgainButton.gameObject.SetActive(false);
+        play.gameObject.SetActive(false);
+        quit.gameObject.SetActive(false);
     }
 
     void ILevelTitleEntity.OnExit(Game game, IBaseGameState current) {
@@ -69,7 +80,8 @@ public class TitleUI : MonoBehaviour, ILevelTitleEntity, ILevelCompleteEntity {
             fade.color = new Color(fade.color.r, fade.color.g, fade.color.b, fadeTransitionCurve.Evaluate(normalizedFadeTransitionRate));            
         }
         else {
-            playAgainButton.gameObject.SetActive(true);                                                
+            play.gameObject.SetActive(true);
+            quit.gameObject.SetActive(true);                                                
         }    
     }
 

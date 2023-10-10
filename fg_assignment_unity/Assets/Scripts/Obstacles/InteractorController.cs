@@ -171,7 +171,10 @@ namespace Lander {
         void ILevelCompleteEntity.OnFixedTick(Game game, float dt) {
         }       
 
-        void ILevelEndEntity.OnEnter(Game game, IBaseGameState previous) {
+        void ILevelEndEntity.OnEnter(Game game, IBaseGameState previous) {            
+        }
+
+        void ILevelEndEntity.OnExit(Game game, IBaseGameState current) {
             var waterInstances = FindObjectsOfType<WaterDropletInteractor>();
             var windInstances = FindObjectsOfType<WindInteractor>();
 
@@ -188,10 +191,14 @@ namespace Lander {
             }
         }
 
-        void ILevelEndEntity.OnExit(Game game, IBaseGameState current) {
-        }
-
         void ILevelEndEntity.OnTick(Game game, float dt) {
+            foreach(var spawner in waterSpawners) {
+                spawner.Tick(game, dt);
+            }
+
+            foreach(var spawner in windSpawners) {
+                spawner.Tick(game, dt);              
+            } 
         }
 
         void ILevelEndEntity.OnFixedTick(Game game, float dt) {

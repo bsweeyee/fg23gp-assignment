@@ -753,7 +753,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   fallOffSpeed: 4.5
-  maximumVelocity: {x: 0, y: 30, z: 0}
+  maximumSpeed: 30
   minDragCoefficient: 1
   maxDragCoefficient: 1.5
   size: {x: 1.5, y: 1.5, z: 0}

@@ -11,7 +11,7 @@ namespace Lander {
             [SerializeField] private float fallOffSpeed = 1;
 
             [Header("Velocity")]
-            [SerializeField] private Vector3 maximumVelocity;
+            [SerializeField] private float maximumSpeed;
             
             [Header("Drag Coefficients")]
             [SerializeField][Min(0.1f)] private float minDragCoefficient = 50;
@@ -180,7 +180,7 @@ namespace Lander {
                 finalAcceleration += gravity;                                            
 
                 var finalVel = new Vector3(vx, vy, vz) + (finalAcceleration * dt);
-                if (finalVel.magnitude > maximumVelocity.magnitude) finalVel = currentVelocity;
+                if (finalVel.magnitude > maximumSpeed) finalVel = currentVelocity.normalized * maximumSpeed;
                 return finalVel;
             }
 

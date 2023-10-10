@@ -7,6 +7,7 @@ using UnityEngine.Serialization;
 [CreateAssetMenu(fileName = "GameSettings", menuName = "Settings/Game")]
 public class GameSettings : ScriptableObject {
     [Header("Main")]
+    public Vector2Int WindowSize;
     public Game GamePrefab;
     public CameraController CameraPrefab;
     public Player PlayerPrefab;

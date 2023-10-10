@@ -199,6 +199,7 @@ namespace Lander {
                     CurrentState = PLAY_STATE;                    
                 }
                 if(GUILayout.Button("LEVEL COMPLETE")) {
+                    levelController.CurrentLevel += 1;
                     CurrentState = LEVEL_COMPLETE_STATE;
                 }
                 if(GUILayout.Button("LEVEL END")) {

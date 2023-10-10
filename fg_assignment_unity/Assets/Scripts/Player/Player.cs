@@ -147,7 +147,7 @@ namespace Lander {
             physics.OnFirstGrounded.AddListener( OnFirstGrounded );
             physics.OnFirstUnGrounded.AddListener( OnFirstUnGrounded );
 
-            CurrentPlayerState = EPlayerState.ALIVE;
+            // CurrentPlayerState = EPlayerState.ALIVE;
 
             IsLateInitialized = true;
         }
@@ -176,7 +176,7 @@ namespace Lander {
             physics.Gravity = gravity;
             physics.Reset();
             controlRate = 0;
-            targetFlightDirection = Vector3.zero;
+            targetFlightDirection = Vector3.zero;            
         }
 
         void ILevelPlayEntity.OnExit(Game game, IBaseGameState current) {
@@ -184,7 +184,8 @@ namespace Lander {
 
         void ILevelStartEntity.OnEnter(Game game, IBaseGameState previous) {
             currentEnergyLevel = maxEnergy;
-            game.PhysicsTickFactor = 1;         
+            game.PhysicsTickFactor = 1;
+            CurrentPlayerState = EPlayerState.ALIVE;         
         }
 
         void ILevelStartEntity.OnExit(Game game, IBaseGameState current) {
@@ -196,8 +197,7 @@ namespace Lander {
         void ILevelStartEntity.OnFixedTick(Game game, float dt) {
         }
 
-        void ILevelEndEntity.OnEnter(Game game, IBaseGameState previous) {
-            physics.Gravity = Vector3.zero;
+        void ILevelEndEntity.OnEnter(Game game, IBaseGameState previous) {            
         }
 
         void ILevelEndEntity.OnExit(Game game, IBaseGameState current) {
@@ -205,11 +205,23 @@ namespace Lander {
         }
 
         void ILevelEndEntity.OnTick(Game game, float dt) {
-            
+            switch(CurrentPlayerState)
+            {
+                case EPlayerState.ALIVE:
+                TickAlive(game, dt);
+                break;
+                case EPlayerState.DEAD:
+                TickDead(game, dt);
+                break;
+            }
         }
 
         void ILevelEndEntity.OnFixedTick(Game game, float dt) {
-            
+            switch(CurrentPlayerState) {
+                case EPlayerState.ALIVE:
+                FixedTickAlive(game, dt);
+                break;
+            }
         }
 
         private void FixedTickAlive(Game game, float dt) {

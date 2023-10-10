@@ -27,7 +27,13 @@ namespace Lander {
         public void OnEnter(Game game, IBaseGameState previous) {                        
             Initialize();
             onEnterTrigger.AddListener( (Collider2D collider, float dt) => {
-                game.CurrentState = Game.LEVEL_COMPLETE_STATE;
+                game.LevelController.CurrentLevel += 1;
+                if (game.LevelController.CurrentLevel >= game.GameSettings.LevelData.Length) {
+                    game.CurrentState = Game.LEVEL_END_STATE;
+                }
+                else {
+                    game.CurrentState = Game.LEVEL_COMPLETE_STATE;
+                }
             });            
         }
 

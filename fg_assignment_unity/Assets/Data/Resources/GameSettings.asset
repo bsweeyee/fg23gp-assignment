@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca20e35d87119c540885b94917055779, type: 3}
   m_Name: GameSettings
   m_EditorClassIdentifier: 
+  WindowSize: {x: 600, y: 800}
   GamePrefab: {fileID: 7299579562213864245, guid: 6279783cf9aaaa148a376df8634d729b, type: 3}
   CameraPrefab: {fileID: 3491709621627698892, guid: 61093c3471103d04bad0636ae867b0c6, type: 3}
   PlayerPrefab: {fileID: 7918175204807317319, guid: bbae3bf03adc84e49b4b584405bd2f05, type: 3}

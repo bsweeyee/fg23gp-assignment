@@ -389,16 +389,16 @@ MonoBehaviour:
     LocalSpawnPoint: {x: 4, y: -9.5, z: 0}
   - LocalSpaceCentre: {x: 5.5, y: -7.5, z: 0.1}
     Size: {x: 1, y: 1, z: 0.2}
-    LocalSpawnPoint: {x: 5, y: -5.75, z: 0}
+    LocalSpawnPoint: {x: 4.75, y: -5.75, z: 0}
   - LocalSpaceCentre: {x: -5, y: -4.5, z: 0.1}
     Size: {x: 2, y: 1, z: 0.2}
     LocalSpawnPoint: {x: -5, y: -3, z: 0}
   - LocalSpaceCentre: {x: 5.5, y: -3.5, z: 0.1}
     Size: {x: 1, y: 1, z: 0.2}
-    LocalSpawnPoint: {x: 5, y: -1.5, z: 0}
+    LocalSpawnPoint: {x: 4.75, y: -1.5, z: 0}
   - LocalSpaceCentre: {x: 5.5, y: 0.5, z: 0.1}
     Size: {x: 1, y: 1, z: 0.2}
-    LocalSpawnPoint: {x: 5, y: 2.25, z: 0}
+    LocalSpawnPoint: {x: 4.75, y: 2.25, z: 0}
   - LocalSpaceCentre: {x: -5.5, y: 1.5, z: 0.1}
     Size: {x: 1, y: 1, z: 0.2}
     LocalSpawnPoint: {x: -5, y: 3.25, z: 0}
@@ -1368,9 +1368,9 @@ MonoBehaviour:
   - LocalSpaceCentre: {x: -6.5, y: 0, z: 0.1}
     Size: {x: 1, y: 24, z: 0.2}
     LocalSpawnPoint: {x: -6.5, y: 0, z: 0.1}
-  - LocalSpaceCentre: {x: 6.5, y: 0.5, z: 0.1}
+  - LocalSpaceCentre: {x: 6.5, y: 0, z: 0.1}
     Size: {x: 1, y: 24, z: 0.2}
-    LocalSpawnPoint: {x: 6.5, y: 0.5, z: 0.1}
+    LocalSpawnPoint: {x: 6.5, y: 0, z: 0.1}
   - LocalSpaceCentre: {x: -1.5, y: 7.5, z: 0.1}
     Size: {x: 1, y: 5, z: 0.2}
     LocalSpawnPoint: {x: -1.5, y: 7.5, z: 0.1}

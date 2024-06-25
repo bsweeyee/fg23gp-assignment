@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Lander {
     [System.Serializable]
@@ -8,7 +9,7 @@ namespace Lander {
         public int LevelID;
         public GameObject StartBlock;
         public GameObject EndBlock;
-        public GameObject[] LevelBlocks;
+        [FormerlySerializedAs("LevelBlocks")] public GameObject[] PlatformBlocks;
     }
 }
 

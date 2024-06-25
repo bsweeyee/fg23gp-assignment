@@ -26,7 +26,9 @@ public class Init : MonoBehaviour
             var titleUI = Instantiate(gameSettings.TitleUIPrefab);
         }
 
-        Screen.SetResolution(gameSettings.WindowSize.x, gameSettings.WindowSize.y, false);
+        #if !UNITY_WEBGL
+        Screen.SetResolution(gameSettings.WindowSize.x, gameSettings.WindowSize.y, false);        
+        #endif
 
         game.Initialize(gameSettings);
         game.CurrentState = Game.LEVEL_TITLE_STATE;
